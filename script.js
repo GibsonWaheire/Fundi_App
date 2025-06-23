@@ -13,7 +13,7 @@ import {
 
 // ===== FIREBASE CONFIG AND INIT (CDN VERSION) =====
 const firebaseConfig = {
-    apiKey: "AIzaSyAElWc1Uvp8MNLme8ZJp9JUokp1jEKciQI",
+    apiKey: "1061351049872-kc42olhfm8e7ebf9vb34b1qhndq27o94.apps.googleusercontent.com",
     authDomain: "fundisapp-ec0d6.firebaseapp.com",
     projectId: "fundisapp-ec0d6",
     storageBucket: "fundisapp-ec0d6.appspot.com",

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FundiMatch Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/dashboard.css">
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-green-700 text-white p-6 space-y-6">
+        <div class="bg-green-600 rounded px-4 py-3">
+          <a href="index.html" class="block text-white font-semibold hover:underline transition">
+            ← Return to Home
+          </a>
+        </div>
+        <h2 class="text-xl font-bold mb-4">Dashboard</h2>
+        <ul class="space-y-4">
+          <li><button id="dashboardHomeBtn" class="block hover:underline w-full text-left">Home</button></li>
+          <li><button id="makeRequestBtn" class="block hover:underline w-full text-left">Make Request</button></li>
+          <li><button id="myRequestsBtn" class="block hover:underline w-full text-left">My Requests</button></li>
+          <li><button id="profileBtn" class="block hover:underline w-full text-left">Profile</button></li>
+          <li>
+            <button id="logoutBtn" class="mt-4 bg-red-500 px-4 py-2 rounded hover:bg-red-600 w-full">
+              Logout
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-10 space-y-6">
+        <h1 class="text-2xl font-bold text-green-700">Welcome to your dashboard</h1>
+        <p class="mt-2 text-gray-700" id="welcomeMessage">Loading user info...</p>
+
+        <!-- Profile Setup Section -->
+        <section id="profileSetupSection" class="bg-white p-6 rounded shadow hidden">
+          <h2 class="text-xl font-semibold mb-4 text-green-700">Complete Your Profile</h2>
+          <form id="profileSetupForm" class="space-y-4">
+            <div>
+              <label class="block mb-1">First Name</label>
+              <input type="text" id="firstName" pattern="[A-Za-z]+" required class="w-full p-3 border rounded" />
+            </div>
+            <div>
+              <label class="block mb-1">Last Name</label>
+              <input type="text" id="lastName" pattern="[A-Za-z]+" required class="w-full p-3 border rounded" />
+            </div>
+            <div>
+              <label class="block mb-1">Phone Number</label>
+              <input type="tel" id="phoneNumber" required class="w-full p-3 border rounded" />
+            </div>
+            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+              Verify & Continue
+            </button>
+          </form>
+        </section>
+
+        <!-- Dashboard Home -->
+        <section id="dashboardHome" class="bg-white p-6 rounded shadow">
+          <h2 class="text-xl font-semibold mb-4 text-green-700">Dashboard Home</h2>
+          <p>Select an option from the sidebar to get started.</p>
+          <ul class="list-disc pl-5 space-y-2 mt-4">
+            <li>You have <strong id="requestCount">0</strong> requests pending.</li>
+            <li>Check out our <a href="#" class="text-green-600 hover:underline">Top Rated Fundis</a>.</li>
+            <li>
+              <button id="quickRequestBtn" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Make a Quick Request
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Make Request Section -->
+        <section id="makeRequestSection" class="bg-white p-6 rounded shadow hidden">
+          <button class="mb-4 text-green-600 hover:underline backBtn" data-target="dashboardHome">← Back to Dashboard</button>
+          <h2 class="text-xl font-semibold mb-4 text-green-700">Make a New Job Request</h2>
+          <form id="requestForm" class="space-y-4">
+            <div>
+              <label class="block mb-1">Job Type</label>
+              <select id="jobType" class="w-full p-3 border rounded" required>
+                <option value="">Select type</option>
+                <optgroup label="Home Services">
+                  <option value="plumbing">Plumbing</option>
+                  <option value="electrical">Electrical</option>
+                  <option value="carpentry">Carpentry</option>
+                  <option value="painting">Painting</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="gardening">Gardening</option>
+                </optgroup>
+                <optgroup label="Contractors">
+                  <option value="general-contracting">General Contracting</option>
+                  <option value="painting">Painting</option>
+                </optgroup>
+              </select>
+            </div>
+            <div>
+              <label class="block mb-1">Location</label>
+              <input type="text" id="jobLocation" placeholder="e.g., Nairobi" class="w-full p-3 border rounded" required />
+            </div>
+            <div>
+              <label class="block mb-1">Title</label>
+              <input type="text" id="jobTitle" placeholder="Job Title" class="w-full p-3 border rounded" required />
+            </div>
+            <div>
+              <label class="block mb-1">Description</label>
+              <textarea id="jobDescription" placeholder="Describe your job..." class="w-full p-3 border rounded" required></textarea>
+            </div>
+            <div>
+              <label class="block mb-1">Upload Image</label>
+              <input type="file" id="jobImage" accept="image/*" class="w-full p-2 border rounded" />
+            </div>
+            <div>
+              <label class="block mb-1">Upload Video</label>
+              <input type="file" id="jobVideo" accept="video/*" class="w-full p-2 border rounded" />
+            </div>
+            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+              Submit Request
+            </button>
+          </form>
+        </section>
+
+        <!-- Suggested Fundis Section -->
+        <section id="suggestedFundisSection" class="bg-white p-6 rounded shadow hidden">
+          <button class="mb-4 text-green-600 hover:underline backBtn" data-target="dashboardHome">← Back to Dashboard</button>
+          <h2 class="text-xl font-semibold mb-4 text-green-700">Suggested Fundis</h2>
+          <input id="fundiSearch" type="text" placeholder="Search fundis..." class="w-full mb-4 p-3 border rounded" />
+          <div id="fundiContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- My Requests Section -->
+        <section id="myRequestsSection" class="bg-white p-6 rounded shadow hidden">
+          <button class="mb-4 text-green-600 hover:underline backBtn" data-target="dashboardHome">← Back to Dashboard</button>
+          <h2 class="text-xl font-semibold mb-4 text-green-700">My Job Requests</h2>
+          <ul id="requestList" class="space-y-4 text-gray-800">
+            <li class="italic text-gray-500">No requests yet.</li>
+          </ul>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profileSection" class="bg-white p-6 rounded shadow hidden">
+          <button class="mb-4 text-green-600 hover:underline backBtn" data-target="dashboardHome">← Back to Dashboard</button>
+          <h2 class="text-xl font-semibold mb-4 text-green-700">My Profile</h2>
+          <p><strong>Name:</strong> <span id="userName"></span></p>
+          <p><strong>Email:</strong> <span id="userEmail"></span></p>
+        </section>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 px-6">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div>
+          <h4 class="font-bold mb-2">FundiMatch</h4>
+          <p>Connecting you with trusted local fundis across Kenya.</p>
+        </div>
+        <div>
+          <h4 class="font-bold mb-2">Quick Links</h4>
+          <ul class="space-y-1">
+            <li><a href="#" class="hover:underline">FAQs</a></li>
+            <li><a href="#" class="hover:underline">Services</a></li>
+            <li><a href="#" class="hover:underline">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold mb-2">Legal</h4>
+          <ul class="space-y-1">
+            <li><a href="#" class="hover:underline">Terms</a></li>
+            <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div id="contact-section">
+          <h4 class="font-bold mb-2">Contact Us</h4>
+          <p>Email: g.waheir00@gmail.com</p>
+          <p>Phone: +254 726899113</p>
+        </div>
+      </div>
+      <div class="text-center mt-6">&copy; 2025 FundiMatch. All rights reserved.</div>
+    </footer>
+    <script src="./src/dashboard.js"></script>
+  </body>
+</html>

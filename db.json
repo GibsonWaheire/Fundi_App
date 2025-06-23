@@ -1,0 +1,79 @@
+{ 
+    "requests": [], 
+    "fundis": [
+    // "fundis": [
+    //   {
+    //     "id": 1,
+    //     "name": "John Doe",
+    //     "skill": "plumbing",
+    //     "location": "Nairobi",
+    //     "rating": 4.8,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/men/1.jpg",
+    //     "likes": 12
+    //   },
+    //   {
+    //     "id": 2,
+    //     "name": "Jane Smith",
+    //     "skill": "electrical",
+    //     "location": "Mombasa",
+    //     "rating": 4.5,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/women/2.jpg",
+    //     "likes": 8
+    //   },
+    //   {
+    //     "id": 3,
+    //     "name": "Peter Jones",
+    //     "skill": "carpentry",
+    //     "location": "Nairobi",
+    //     "rating": 4.9,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/men/3.jpg",
+    //     "likes": 15
+    //   },
+    //   {
+    //     "id": 4,
+    //     "name": "Mary Wanjiku",
+    //     "skill": "painting",
+    //     "location": "Kisumu",
+    //     "rating": 4.2,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/women/4.jpg",
+    //     "likes": 6
+    //   },
+    //   {
+    //     "id": 5,
+    //     "name": "Samuel Kipruto",
+    //     "skill": "plumbing",
+    //     "location": "Nakuru",
+    //     "rating": 4.7,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/men/5.jpg",
+    //     "likes": 10
+    //   },
+    //   {
+    //     "id": 6,
+    //     "name": "Emily Chebet",
+    //     "skill": "electrical",
+    //     "location": "Nairobi",
+    //     "rating": 4.6,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/women/6.jpg",
+    //     "likes": 9
+    //   },
+    //   {
+    //     "id": 7,
+    //     "name": "David Otieno",
+    //     "skill": "masonry",
+    //     "location": "Mombasa",
+    //     "rating": 4.3,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/men/7.jpg",
+    //     "likes": 7
+    //   },
+    //   {
+    //     "id": 8,
+    //     "name": "Fatuma Ali",
+    //     "skill": "gardening",
+    //     "location": "Nairobi",
+    //     "rating": 4.1,
+    //     "profilePhoto": "https://randomuser.me/api/portraits/women/8.jpg",
+    //     "likes": 5
+    //   }
+    // ]
+    ]
+  }

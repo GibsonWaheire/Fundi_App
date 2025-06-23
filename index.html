@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FundiMatch</title>
+  <link rel="stylesheet" href="./css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Navbar -->
+  <header class="bg-green-600 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">FundiMatch</h1>
+      <nav>
+        <ul class="flex gap-6">
+          <li><a href="#home-section" class="hover:underline">Home</a></li>
+          <li><a href="#about-section" class="hover:underline">About</a></li>
+          <li><a href="#contact-section" class="hover:underline">Contact</a></li>
+          <span class="mx-8">|</span>
+          <li><button id="loginBtn" class="hover:underline bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Login</button></li>
+          <li><button id="registerBtn" class="hover:underline bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Register</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home-section" class="px-10 bg-green-50 min-h-[90vh] flex items-center">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 w-full">
+      
+      <!-- Image Section -->
+      <div class="flex-1 flex justify-center h-full">
+        <img src="./assets/fundi 1.webp" 
+             alt="Hero Image" 
+             class="w-full h-full max-h-[500px] object-cover rounded-xl shadow-lg" />
+      </div>
+  
+      <!-- Text Section -->
+      <div class="flex-1 text-center md:text-left flex flex-col justify-center">
+        <h2 class="text-4xl font-bold text-green-700 mb-6">
+          Connecting youwith Trusted Fundis, Craft Workers and Contractors in Kenya Fast
+        </h2>
+        <p class="text-lg mb-6">
+          Post your job and get matched with verified professionals.
+        </p>
+        <button id="getStartedBtn" 
+                class="bg-red-600 text-white px-6 py-3 rounded hover:bg-red-700 transition">
+          Get Started
+        </button>
+      </div>
+  
+    </div>
+  </section>
+  
+
+  <!-- About Section -->
+  <section id="about-section" class="max-w-7xl mx-auto py-24 px-6">
+    <div class="grid md:grid-cols-3 gap-12">
+      <div>
+        <h3 class="text-2xl font-bold text-green-600 mb-4">Our Story</h3>
+        <p class="mb-6">FundiMatch was born from a need to simplify how Kenyans find skilled professionals in construction and repair. We’re here to bridge the gap.</p>
+        <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Read More</button>
+      </div>
+      <div>
+        <video controls class="rounded shadow-lg w-full h-64 object-cover">
+          <source src="./assets/intro.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      <div>
+        <img src="./assets/fundi 2.jpeg" alt="Fundis at work" class="rounded shadow-lg w-full h-64 object-cover">
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery Slider -->
+  <section class="bg-green-50 py-16 overflow-hidden">
+    <div class="whitespace-nowrap animate-marquee space-x-6 px-6">
+      <img src="./assets/fundi 3.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 4.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 1.webp" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 6.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 2.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 6.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+      <img src="./assets/fundi 7.jpeg" class="inline-block w-64 h-48 rounded shadow object-cover" />
+    </div>
+  </section>
+  
+
+  <!-- Offer Section -->
+  <section class="max-w-7xl mx-auto py-20 px-6 text-center">
+    <h3 class="text-3xl font-bold text-green-700 mb-6">What FundiMatch Offers</h3>
+    <p class="text-lg">Quick access to reliable professionals, job posting, ratings, and direct communication — all in one app.</p>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto text-center">
+      <h3 class="text-3xl font-bold text-green-600 mb-10">What Our Users Say</h3>
+  
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+        <!-- Testimonial 1 -->
+        <div class="bg-green-50 p-6 rounded shadow">
+          <img src="./assets/avatar-2092113_1280.png" class="w-12 h-12 rounded-full mb-4" alt="Mary">
+          <p class="mb-2">“Found a plumber in 15 minutes! This app saved me a lot of time.”</p>
+          <span class="font-semibold">— Mary N., Nairobi</span>
+        </div>
+  
+        <!-- Testimonial 2 -->
+        <div class="bg-green-50 p-6 rounded shadow">
+          <img src="./assets/boy-38262_1280.png" class="w-12 h-12 rounded-full mb-4" alt="John">
+          <p class="mb-2">“As a fundi, I’ve gotten new clients weekly thanks to FundiMatch.”</p>
+          <span class="font-semibold">— John K., Kiambu</span>
+        </div>
+  
+        <!-- Testimonial 3 -->
+        <div class="bg-green-50 p-6 rounded shadow">
+          <img src="./assets/avatar-2092113_1280.png" class="w-12 h-12 rounded-full mb-4" alt="Amina">
+          <p class="mb-2">“FundiMatch connected me with the best mason for my home project.”</p>
+          <span class="font-semibold">— Amina W., Mombasa</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+  <!-- Call to Action -->
+  <section class="bg-green-600 text-white text-center py-16">
+    <h3 class="text-3xl font-bold mb-6">Ready to Get Started?</h3>
+    <button id="getStartedBtn" class="bg-white text-green-600 px-6 py-3 rounded hover:bg-gray-100 transition">Get Started</button>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-12 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div>
+        <h4 class="font-bold mb-2">FundiMatch</h4>
+        <p>Connecting you with trusted local fundis across Kenya.</p>
+      </div>
+      <div>
+        <h4 class="font-bold mb-2">Quick Links</h4>
+        <ul class="space-y-1">
+          <li><a href="#" class="hover:underline">FAQs</a></li>
+          <li><a href="#" class="hover:underline">Services</a></li>
+          <li><a href="#" class="hover:underline">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold mb-2">Legal</h4>
+        <ul class="space-y-1">
+          <li><a href="#" class="hover:underline">Terms</a></li>
+          <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div id="contact-section">
+        <h4 class="font-bold mb-2">Contact Us</h4>
+        <p>Email: g.waheir00@gmail.com</p>
+        <p>Phone: +254 726899113</p>
+      </div>
+    </div>
+    <div class="text-center mt-6">&copy; 2025 FundiMatch. All rights reserved.</div>
+  </footer>
+
+  <script src="./src/script.js"></script>
+  <!-- Login Modal -->
+<section id="login-section" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+      <h2 class="text-xl font-bold text-center mb-4">Login</h2>
+      <form id="loginForm" class="space-y-4">
+        <input type="email" id="loginEmail" class="w-full border px-3 py-2 rounded" placeholder="Email" required />
+        <input type="password" id="loginPassword" class="w-full border px-3 py-2 rounded" placeholder="Password" required />
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Login</button>
+        <p class="text-sm text-center mt-2">
+          Don't have an account?
+          <button type="button" class="text-green-600 hover:underline" onclick="switchToRegister()">Register</button>
+        </p>
+      </form>
+    </div>
+  </section>
+  
+  <!-- Register Modal -->
+  <section id="register-section" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+      <h2 class="text-xl font-bold text-center mb-4">Register</h2>
+      <form id="registerForm" class="space-y-4">
+        <input type="text" id="registerName" class="w-full border px-3 py-2 rounded" placeholder="Full Name" required />
+        <input type="email" id="registerEmail" class="w-full border px-3 py-2 rounded" placeholder="Email" required />
+        <input type="password" id="registerPassword" class="w-full border px-3 py-2 rounded" placeholder="Password" required />
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Create Account</button>
+        <p class="text-sm text-center mt-2">
+          Already have an account?
+          <button type="button" class="text-green-600 hover:underline" onclick="switchToLogin()">Login</button>
+        </p>
+      </form>
+    </div>
+  </section>
+  
+</body>
+</html>

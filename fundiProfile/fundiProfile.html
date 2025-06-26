@@ -1,0 +1,21 @@
+<!DOCTYPE html><html><head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="./fundiProfile.js"></script>
+  </head><body class="p-6">
+    <div id="profileCard" class="max-w-md mx-auto bg-white p-6 rounded shadow"></div>
+    <div id="reviews" class="max-w-md mx-auto mt-6 space-y-4"></div>
+    <form id="reviewForm" class="max-w-md mx-auto mt-6 space-y-4">
+      <h3 class="text-lg font-semibold">Leave a review</h3>
+      <select id="rating" required class="w-full p-2 border rounded">
+        <option value="">Select rating</option>
+        <option value="5">⭐️⭐️⭐️⭐️⭐️</option>
+        <option value="4">⭐️⭐️⭐️⭐️</option>
+        <!-- etc -->
+      </select>
+      <textarea id="comment" rows="3" class="w-full p-2 border rounded" placeholder="Your comments…"></textarea>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">
+        Submit Review
+      </button>
+    </form>
+  </body></html>
+  

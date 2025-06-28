@@ -1,5 +1,4 @@
-# Update the README content with improved formatting and the Loom video link
-readme_updated = """
+
 # 🛠️ FundiMatch – Trusted Fundis & Contractors in Kenya
 
 FundiMatch is a web-based application that connects homeowners, tenants, and project managers in Kenya with verified and professional fundis (craft workers), contractors, and engineers. It is a platform that aims to provide a seamless experience for both users and fundis, while ensuring the safety and reliability of the matches. 

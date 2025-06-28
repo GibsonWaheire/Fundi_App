@@ -1,26 +1,36 @@
-# README.md 
-
+# Update the README content with improved formatting and the Loom video link
+readme_updated = """
 # 🛠️ FundiMatch – Trusted Fundis & Contractors in Kenya
 
-FundiMatch is a web-based application that connects homeowners, tenants, and project managers in Kenya with verified and professional fundis (craft workers), contractors, and engineers. it is a platform that aims to provide a seamless experience for both users and fundis, while ensuring the safety and reliability of the matches. Its simple, responsive, and secure fundi matching platform built using HTML, CSS, JavaScript, and Firebase Authentication. The project allows users to register, login, and view their fundi profiles, making it easy to find and connect with potential fundi matches.
+FundiMatch is a web-based application that connects homeowners, tenants, and project managers in Kenya with verified and professional fundis (craft workers), contractors, and engineers. It is a platform that aims to provide a seamless experience for both users and fundis, while ensuring the safety and reliability of the matches. 
+
+It’s a simple, responsive, and secure fundi matching platform built using HTML, CSS, JavaScript, and Firebase Authentication. The project allows users to register, login, and view their fundi profiles, making it easy to find and connect with potential fundi matches.
+
+🎥 **Demo Video**: [Watch on Loom](https://www.loom.com/share/d2dfd4e703ec4ea69c1591ba5776a735?sid=94d3bc6e-1e98-4174-8292-b34d64c8bd1b)
+
+---
 
 ## 🚀 Features
 
-- **User Authentication**: Firebase-based login/register with email verification
-- **Job Requests**: Submit jobs with title, description, and optional media (image/video)
-- **Skill Categories**: Choose from Fundis, Contractors, and Professionals
-- **Suggested Fundis**: View top-rated fundis based on category
-- **Profile Management**: Users can edit profile info and see their job history
-- **Local Storage Support**: Requests are saved per user locally for MVP testing
-- **Modern UI**: Built with Tailwind CSS and mobile-first design
+- **User Authentication**: Firebase-based login/register with email verification  
+- **Job Requests**: Submit jobs with title, description, and optional media (image/video)  
+- **Skill Categories**: Choose from Fundis, Contractors, and Professionals  
+- **Suggested Fundis**: View top-rated fundis based on category  
+- **Profile Management**: Users can edit profile info and see their job history  
+- **Local Storage Support**: Requests are saved per user locally for MVP testing  
+- **Modern UI**: Built with Tailwind CSS and mobile-first design  
+
+---
 
 ## 📦 Tech Stack
 
-- **Frontend**: HTML, CSS (Tailwind), JavaScript (ES6+)
-- **Auth & Hosting**: Firebase Authentication
-- **Mock Fundi Profiles**: Random User API
-- **Data Storage**: `localStorage` (can be upgraded to Firebase Firestore)
-- **Bundler/Local API**: JSON Server (optional for backend simulation)
+- **Frontend**: HTML, CSS (Tailwind), JavaScript (ES6+)  
+- **Auth & Hosting**: Firebase Authentication  
+- **Mock Fundi Profiles**: Random User API  
+- **Data Storage**: `localStorage` (can be upgraded to Firebase Firestore)  
+- **Bundler/Local API**: JSON Server (optional for backend simulation)  
+
+---
 
 ## 🔐 Firebase Setup
 
@@ -35,6 +45,7 @@ export const firebaseConfig = {
   messagingSenderId: "...",
   appId: "..."
 };
+
 
 
 📂 Folder Structure

@@ -1,9 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import PhoneLoginModal from './PhoneLoginModal'
+import MpesaPaymentModal from './MpesaPaymentModal'
 
 const Home = () => {
   const [currentImage, setCurrentImage] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [userData, setUserData] = useState(null)
   
   const heroImages = [
     'https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
@@ -19,6 +24,22 @@ const Home = () => {
     }, 8000)
     return () => clearInterval(interval)
   }, [heroImages.length])
+
+  const handleFindFundis = () => {
+    setIsPhoneModalOpen(true)
+  }
+
+  const handlePhoneSuccess = (user) => {
+    setUserData(user)
+    setIsPhoneModalOpen(false)
+    setIsPaymentModalOpen(true)
+  }
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false)
+    // Redirect to dashboard find fundis page
+    window.location.href = '/dashboard/find-fundis'
+  }
 
   const services = [
     {
@@ -178,15 +199,15 @@ const Home = () => {
           <div className={`flex flex-col sm:flex-row gap-6 justify-center mb-12 transition-all duration-1000 delay-900 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <Link
-              to="/fundi-profile"
+            <button
+              onClick={handleFindFundis}
               className="group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl font-bold rounded-2xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 overflow-hidden"
             >
               <span className="relative z-10">🚀 Find Fundis Now</span>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
+            </button>
             <button
-              onClick={() => window.location.href = '/fundi-profile'}
+              onClick={handleFindFundis}
               className="group px-10 py-5 border-3 border-white text-white text-xl font-bold rounded-2xl hover:bg-white hover:text-gray-900 transition-all duration-300 backdrop-blur-sm hover:backdrop-blur-none"
             >
               <span className="flex items-center justify-center">
@@ -372,14 +393,14 @@ const Home = () => {
             Join thousands of Kenyans who trust FundiMatch for their home projects
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/fundi-profile"
+            <button
+              onClick={handleFindFundis}
               className="px-8 py-4 bg-white text-blue-600 text-lg font-semibold rounded-xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-2xl"
             >
               Find Fundis Now
-            </Link>
+            </button>
             <button
-              onClick={() => window.location.href = '/fundi-profile'}
+              onClick={handleFindFundis}
               className="px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-xl hover:bg-white hover:text-blue-600 transition-all duration-300"
             >
               Post Your Job
@@ -433,6 +454,22 @@ const Home = () => {
           </div>
         </div>
       </footer>
+
+      {/* Modals */}
+      <PhoneLoginModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        onSuccess={handlePhoneSuccess}
+        showPayment={true}
+      />
+
+      <MpesaPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        fundi={null}
+        phoneNumber={userData?.phone}
+      />
     </div>
   )
 }

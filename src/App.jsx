@@ -19,6 +19,9 @@ import Settings from './components/dashboard/Settings'
 import FindFundis from './components/dashboard/FindFundis'
 import Availability from './components/dashboard/Availability'
 import Profile from './components/dashboard/Profile'
+import Users from './components/dashboard/Users'
+import Fundis from './components/dashboard/Fundis'
+import Reports from './components/dashboard/Reports'
 
 // Component to conditionally render Navbar
 function AppContent() {
@@ -45,6 +48,9 @@ function AppContent() {
           <Route path="settings" element={<Settings />} />
           <Route path="availability" element={<Availability />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="users" element={<Users />} />
+          <Route path="fundis" element={<Fundis />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
         <Route path="/fundi-profile" element={<FundiProfile />} />
         <Route path="/about" element={<About />} />

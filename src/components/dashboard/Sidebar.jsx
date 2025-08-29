@@ -10,15 +10,45 @@ export default function Sidebar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
 
-  const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Overview & Analytics' },
-    { path: '/dashboard/find-fundis', label: 'Find Fundis', icon: '🔍', description: 'Browse & hire fundis' },
-    { path: '/dashboard/jobs', label: 'My Jobs', icon: '📋', description: 'Manage your projects' },
-    { path: '/dashboard/bookings', label: 'My Bookings', icon: '📅', description: 'Appointments & schedules' },
-    { path: '/dashboard/messages', label: 'Messages', icon: '💬', description: 'Chat with fundis' },
-    { path: '/dashboard/payments', label: 'Payments', icon: '💰', description: 'Transaction history' },
-    { path: '/dashboard/settings', label: 'Settings', icon: '⚙️', description: 'Account preferences' }
-  ]
+  // Different menu items based on user type
+  const getMenuItems = () => {
+    if (!user) return []
+    
+    if (user.type === 'fundi') {
+      return [
+        { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Overview & Analytics' },
+        { path: '/dashboard/jobs', label: 'My Jobs', icon: '📋', description: 'Assigned work & projects' },
+        { path: '/dashboard/availability', label: 'Availability', icon: '📅', description: 'Set your schedule' },
+        { path: '/dashboard/messages', label: 'Messages', icon: '💬', description: 'Chat with clients' },
+        { path: '/dashboard/payments', label: 'Earnings', icon: '💰', description: 'Payments received' },
+        { path: '/dashboard/reviews', label: 'Reviews', icon: '⭐', description: 'Client feedback' },
+        { path: '/dashboard/profile', label: 'Profile', icon: '👤', description: 'Edit your profile' },
+        { path: '/dashboard/settings', label: 'Settings', icon: '⚙️', description: 'Account preferences' }
+      ]
+    } else if (user.type === 'admin') {
+      return [
+        { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Admin Overview' },
+        { path: '/dashboard/users', label: 'Users', icon: '👥', description: 'Manage all users' },
+        { path: '/dashboard/fundis', label: 'Fundis', icon: '🛠️', description: 'Manage fundis' },
+        { path: '/dashboard/jobs', label: 'All Jobs', icon: '📋', description: 'Monitor all jobs' },
+        { path: '/dashboard/reports', label: 'Reports', icon: '📊', description: 'Analytics & reports' },
+        { path: '/dashboard/settings', label: 'Settings', icon: '⚙️', description: 'System settings' }
+      ]
+    } else {
+      // Default client menu
+      return [
+        { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Overview & Analytics' },
+        { path: '/dashboard/find-fundis', label: 'Find Fundis', icon: '🔍', description: 'Browse & hire fundis' },
+        { path: '/dashboard/jobs', label: 'My Jobs', icon: '📋', description: 'Manage your projects' },
+        { path: '/dashboard/bookings', label: 'My Bookings', icon: '📅', description: 'Appointments & schedules' },
+        { path: '/dashboard/messages', label: 'Messages', icon: '💬', description: 'Chat with fundis' },
+        { path: '/dashboard/payments', label: 'Payments', icon: '💰', description: 'Transaction history' },
+        { path: '/dashboard/settings', label: 'Settings', icon: '⚙️', description: 'Account preferences' }
+      ]
+    }
+  }
+
+  const menuItems = getMenuItems()
 
   return (
     <>
@@ -74,7 +104,10 @@ export default function Sidebar() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">Welcome, {user.name || 'User'}</p>
-                  <p className="text-xs text-gray-500">{user.phone || user.email}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user.type || 'user'}</p>
+                  {user.skill && (
+                    <p className="text-xs text-blue-600 font-medium">{user.skill}</p>
+                  )}
                 </div>
               </div>
               <button 

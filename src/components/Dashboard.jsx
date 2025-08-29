@@ -4,6 +4,9 @@ import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import QuickStats from './dashboard/QuickStats'
 import RecentActivity from './dashboard/RecentActivity'
+import FundiDashboard from './dashboard/FundiDashboard'
+import ClientDashboard from './dashboard/ClientDashboard'
+import AdminDashboard from './dashboard/AdminDashboard'
 import './dashboard/Dashboard.css'
 
 export default function Dashboard() {
@@ -21,8 +24,9 @@ export default function Dashboard() {
         <div className="dashboard-content">
           {isMainDashboard ? (
             <>
-              <QuickStats />
-              <RecentActivity />
+              {user?.type === 'fundi' && <FundiDashboard />}
+              {user?.type === 'admin' && <AdminDashboard />}
+              {(!user?.type || user?.type === 'customer') && <ClientDashboard />}
             </>
           ) : (
             <Outlet />

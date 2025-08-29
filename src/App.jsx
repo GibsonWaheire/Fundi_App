@@ -17,6 +17,8 @@ import Payments from './components/dashboard/Payments'
 import Reviews from './components/dashboard/Reviews'
 import Settings from './components/dashboard/Settings'
 import FindFundis from './components/dashboard/FindFundis'
+import Availability from './components/dashboard/Availability'
+import Profile from './components/dashboard/Profile'
 
 // Component to conditionally render Navbar
 function AppContent() {
@@ -41,6 +43,8 @@ function AppContent() {
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="availability" element={<Availability />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="/fundi-profile" element={<FundiProfile />} />
         <Route path="/about" element={<About />} />

@@ -130,8 +130,10 @@ python lib/cli.py
 The project also includes a web interface with proper authentication:
 
 **Valid Login Credentials:**
-- **Email:** `user@example.com` | **Password:** `password123`
-- **Email:** `admin@fundimatch.com` | **Password:** `admin123`
+- **Customer:** `user@example.com` | **Password:** `password123`
+- **Admin:** `admin@fundimatch.com` | **Password:** `admin123`
+- **Fundi (Electrician):** `fundi@example.com` | **Password:** `fundi123`
+- **Fundi (Plumber):** `mary@fundimatch.com` | **Password:** `mary123`
 
 **Features:**
 - ✅ Proper email/password validation

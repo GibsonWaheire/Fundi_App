@@ -1075,8 +1075,8 @@ def seed_sample_data(session):
         
         # Create users
         users = [
-            User(username="admin", email="admin@fundi.com", password="admin123", phone="+254700000002", role="admin"),
-            User(username="john_doe", email="john@example.com", password="john123", phone="+254700000001", role="client"),
+            User(username="admin", email="admin@example.com", password="admin123", phone="+254700000002", role="admin"),
+            User(username="john_doe", email="client@example.com", password="client123", phone="+254700000001", role="client"),
             User(username="testfundi", email="fundi@example.com", password="fundi123", phone="+254711111111", role="fundi"),
             User(username="electrician_mike", email="mike@example.com", password="mike123", phone="+254711111112", role="fundi")
         ]

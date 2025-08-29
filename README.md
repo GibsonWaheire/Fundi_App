@@ -13,14 +13,15 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 ## 🚀 Key Features
 
 ### 🌐 Web Application
-- **🔐 Multi-Role Authentication**: Admin, Client, and Fundi user types
-- **🎯 Role-Based Dashboards**: Customized interfaces for each user type
-- **👥 Fundi Discovery**: Browse and filter fundis by specialization
-- **📋 Job Management**: Create, assign, and track job progress
-- **⭐ Review System**: Rate and review completed work
-- **💰 Payment Tracking**: Monitor financial transactions
+- **🔐 Multi-Role Authentication**: Admin, Client, and Fundi user types with custom session management
+- **🎯 Role-Based Dashboards**: Customized interfaces for each user type with specific features
+- **👥 Fundi Discovery**: Browse and filter fundis by specialization and availability
+- **📋 Job Management**: Create, assign, and track job progress with status updates
+- **⭐ Review System**: Rate and review completed work with feedback
+- **💰 Payment Tracking**: Monitor financial transactions and earnings
 - **📱 Responsive Design**: Mobile-first approach with Tailwind CSS
-- **🔒 Protected Routes**: Secure access control
+- **🔒 Protected Routes**: Secure access control with role-based navigation
+- **🎨 Modern UI**: Beautiful, intuitive interface with gradient designs
 
 ### 💻 Command-Line Interface (CLI)
 - **🏗️ Professional Architecture**: Object-oriented design with SQLAlchemy ORM
@@ -43,16 +44,16 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 
 ### Web Application Architecture
 ```
-📊 Frontend (React.js)
+📊 Frontend (React.js + Vite)
 ├── Components (Modular UI components)
 ├── Contexts (Authentication state management)
-├── Services (API communication)
+├── Services (API communication with JSON Server)
 └── Routes (Protected navigation)
 
 📊 Backend (JSON Server)
-├── db.json (Data storage)
-├── RESTful API endpoints
-└── Real-time data updates
+├── db.json (Data storage with RESTful API)
+├── Real-time data updates
+└── CRUD operations for all entities
 ```
 
 ### CLI Application Architecture
@@ -102,6 +103,7 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 - **Backend**: JSON Server (RESTful API)
 - **Authentication**: Custom session management
 - **Build Tool**: Vite
+- **Package Manager**: npm
 
 ### CLI Application
 - **Language**: Python 3.8+
@@ -312,10 +314,9 @@ python lib/db/seed.py
 ### Environment Variables
 Create `.env` file for sensitive data:
 ```env
-# Firebase Configuration (if using Firebase)
-FIREBASE_API_KEY=your_api_key
-FIREBASE_AUTH_DOMAIN=your_domain
-FIREBASE_PROJECT_ID=your_project_id
+# API Configuration
+API_BASE_URL=http://localhost:3001
+NODE_ENV=development
 ```
 
 ---
@@ -350,7 +351,7 @@ FIREBASE_PROJECT_ID=your_project_id
    ```
 
 2. **Deploy to hosting service**
-   - Vercel, Netlify, or Firebase Hosting
+   - Vercel, Netlify, or similar platforms
    - Update API endpoints for production
 
 ### CLI Application Distribution
@@ -378,7 +379,7 @@ FIREBASE_PROJECT_ID=your_project_id
 
 ### Technical Upgrades
 - **Authentication**: JWT tokens and password hashing
-- **API Development**: RESTful API with Express.js
+- **API Development**: Express.js backend with MongoDB
 - **Cloud Database**: PostgreSQL or MongoDB
 - **Performance**: Caching and optimization
 - **Security**: Input validation and SQL injection prevention
@@ -395,7 +396,7 @@ FIREBASE_PROJECT_ID=your_project_id
 - ✅ Responsive design with Tailwind CSS
 
 ### Backend Development
-- ✅ RESTful API design
+- ✅ RESTful API design with JSON Server
 - ✅ Database schema design
 - ✅ User authentication and authorization
 - ✅ Data validation and error handling

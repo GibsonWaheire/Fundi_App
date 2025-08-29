@@ -288,8 +288,8 @@ python lib/db/seed.py
 
 ```python
 # Sample Users
-admin = User(username="admin", email="admin@fundi.com", role="admin")
-client = User(username="testuser", email="test@example.com", role="client")
+admin = User(username="admin", email="admin@example.com", role="admin")
+client = User(username="testuser", email="client@example.com", role="client")
 fundi = User(username="testfundi", email="fundi@example.com", role="fundi")
 
 # Sample Categories

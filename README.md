@@ -261,7 +261,7 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
     {
       "id": 1,
       "username": "admin",
-      "email": "admin@fundi.com",
+      "email": "admin@example.com",
       "role": "admin"
     }
   ],

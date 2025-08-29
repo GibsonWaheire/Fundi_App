@@ -1,4 +1,3 @@
-
 # 🛠️ FundiMatch – Professional Fundi Management Platform
 
 **FundiMatch** is a comprehensive platform that connects homeowners, tenants, and project managers in Kenya with verified and professional fundis (craft workers), contractors, and engineers. The platform provides both a modern web interface and a powerful command-line interface for complete fundi management.
@@ -52,11 +51,7 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 
 📊 Backend (JSON Server)
 ├── db.json (Data storage)
-├── ](RESTful API)
-├── routes.py (API endpoints)
-├── views.py (Controller logic)
-├── auth.py (Authentication functions)
-├── models.py (Database schema)
+├── RESTful API endpoints
 └── Real-time data updates
 ```
 
@@ -114,7 +109,7 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 - **Database**: SQLite
 - **Dependencies**: Pipenv
 - **Architecture**: Object-oriented design
-
+- **Documentation**: Comprehensive README
 
 ---
 
@@ -240,23 +235,24 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
 
 ## 📊 Sample Data & Testing
 
-### Web Application Credentials
-After starting the JSON server, use these credentials:
+### Testing Instructions
 
-**Admin:**
-- Email: `admin@fundi.com`
-- Password: _ CONTACT TO GET THIS_`
+#### Web Application Testing
+1. **Start JSON server**: `npx json-server --watch db.json --port 3001`
+2. **Start development server**: `npm run dev`
+3. **Test user flows**:
+   - Guest → Client registration → Job creation
+   - Guest → Fundi registration → Profile setup
+   - Admin login → User management
 
-**Client:**
-- Email: `test@example.com`
-- Password:  _ CONTACT TO GET THIS_`
-
-**Fundi:**
-- Email: `fundi@example.com`
-- Password:  _ CONTACT TO GET THIS_`
-
-### CLI Application Credentials
-After seeding the database, use the same credentials as above.
+#### CLI Application Testing
+1. **Seed database**: `python lib/db/seed.py`
+2. **Run CLI**: `python lib/main.py`
+3. **Test all user roles**:
+   - Guest operations
+   - Client job management
+   - Fundi profile management
+   - Admin system management
 
 ### Sample Data Structure
 ```json

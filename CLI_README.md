@@ -302,19 +302,7 @@ job = Job(title="Fix leaking sink", description="Kitchen sink repair",
 
 ### Login Credentials
 
-After seeding, you can use these credentials:
-
-**Admin:**
-- Email: `admin@fundi.com`
-- Password: ` _ CONTACT TO GET THIS_`
-
-**Client:**
-- Email: `test@example.com`
-- Password: ` _ CONTACT TO GET THIS_``
-
-**Fundi:**
-- Email: `fundi@example.com`
-- Password: _ CONTACT TO GET THIS_`
+After seeding, you can use the sample data provided in the database. The seeding script creates default users for testing purposes. Contact the developer for access credentials.
 
 ## 🔧 Development & Customization
 

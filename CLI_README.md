@@ -125,6 +125,20 @@ rm fundimatch.db
 python lib/cli.py
 ```
 
+## 🌐 Web App Authentication
+
+The project also includes a web interface with proper authentication:
+
+**Valid Login Credentials:**
+- **Email:** `user@example.com` | **Password:** `password123`
+- **Email:** `admin@fundimatch.com` | **Password:** `admin123`
+
+**Features:**
+- ✅ Proper email/password validation
+- ✅ Error messages for invalid credentials
+- ✅ Secure authentication against db.json
+- ✅ User session management
+
 ## 🎓 Next Steps
 
 After mastering this CLI:

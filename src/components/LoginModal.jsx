@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { authService } from '../services/authService'
 
 const LoginModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -7,25 +8,29 @@ const LoginModal = ({ isOpen, onClose }) => {
     password: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const { login } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Login attempt:', formData)
-      // Simulate successful login
-      login({
-        id: 1,
-        email: formData.email,
-        name: 'User',
-        type: 'customer'
-      })
+    try {
+      const result = await authService.validateUser(formData.email, formData.password)
+      
+      if (result.success) {
+        login(result.user)
+        onClose()
+      } else {
+        setError(result.error)
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.')
+      console.error('Login error:', err)
+    } finally {
       setIsLoading(false)
-      onClose()
-    }, 1500)
+    }
   }
 
   const handleChange = (e) => {
@@ -60,6 +65,11 @@ const LoginModal = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 pb-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

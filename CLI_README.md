@@ -306,15 +306,15 @@ After seeding, you can use these credentials:
 
 **Admin:**
 - Email: `admin@fundi.com`
-- Password: `admin123`
+- Password: ` _ CONTACT TO GET THIS_`
 
 **Client:**
 - Email: `test@example.com`
-- Password: `password123`
+- Password: ` _ CONTACT TO GET THIS_``
 
 **Fundi:**
 - Email: `fundi@example.com`
-- Password: `fundi123`
+- Password: _ CONTACT TO GET THIS_`
 
 ## 🔧 Development & Customization
 

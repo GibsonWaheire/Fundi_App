@@ -2,15 +2,24 @@
 // This service handles user authentication against the db.json file
 
 export const authService = {
-  // Validate user credentials
+  // Validate user credentials across all user types (admin, client, fundi)
   async validateUser(email, password) {
     try {
-      const response = await fetch('/db.json')
-      const data = await response.json()
+      // Fetch all user types
+      const [usersResponse, fundisResponse] = await Promise.all([
+        fetch('http://localhost:3001/users'),
+        fetch('http://localhost:3001/fundis')
+      ])
+      
+      const users = await usersResponse.json()
+      const fundis = await fundisResponse.json()
+      
+      // Combine all users and fundis into one array
+      const allUsers = [...users, ...fundis]
       
       // Find user with matching email and password
-      const user = data.users.find(u => 
-        u.email === email && u.password === password
+      const user = allUsers.find(u => 
+        u.email === email && u.password === password && u.is_active !== false
       )
       
       if (user) {
@@ -26,16 +35,58 @@ export const authService = {
     }
   },
 
-  // Get user by email (for registration validation)
+  // Get user by email (for registration validation) - checks all user types
   async getUserByEmail(email) {
     try {
-      const response = await fetch('/db.json')
-      const data = await response.json()
+      // Fetch all user types
+      const [usersResponse, fundisResponse] = await Promise.all([
+        fetch('http://localhost:3001/users'),
+        fetch('http://localhost:3001/fundis')
+      ])
       
-      return data.users.find(u => u.email === email)
+      const users = await usersResponse.json()
+      const fundis = await fundisResponse.json()
+      
+      // Combine all users and fundis into one array
+      const allUsers = [...users, ...fundis]
+      
+      return allUsers.find(u => u.email === email)
     } catch (error) {
       console.error('Error fetching user:', error)
       return null
+    }
+  },
+
+  // Get all fundis (for client dashboard)
+  async getAllFundis() {
+    try {
+      const response = await fetch('http://localhost:3001/fundis')
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching fundis:', error)
+      return []
+    }
+  },
+
+  // Get available fundis only
+  async getAvailableFundis() {
+    try {
+      const response = await fetch('http://localhost:3001/fundis?is_available=true')
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching available fundis:', error)
+      return []
+    }
+  },
+
+  // Get fundis by specialization
+  async getFundisBySpecialization(specialization) {
+    try {
+      const response = await fetch(`http://localhost:3001/fundis?specialization=${specialization}`)
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching fundis by specialization:', error)
+      return []
     }
   }
 }

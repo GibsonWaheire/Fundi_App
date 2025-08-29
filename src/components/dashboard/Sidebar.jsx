@@ -14,7 +14,7 @@ export default function Sidebar() {
   const getMenuItems = () => {
     if (!user) return []
     
-    if (user.type === 'fundi') {
+    if (user.role === 'fundi') {
       return [
         { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Overview & Analytics' },
         { path: '/dashboard/jobs', label: 'My Jobs', icon: '📋', description: 'Assigned work & projects' },
@@ -25,7 +25,7 @@ export default function Sidebar() {
         { path: '/dashboard/profile', label: 'Profile', icon: '👤', description: 'Edit your profile' },
         { path: '/dashboard/settings', label: 'Settings', icon: '⚙️', description: 'Account preferences' }
       ]
-    } else if (user.type === 'admin') {
+    } else if (user.role === 'admin') {
       return [
         { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Admin Overview' },
         { path: '/dashboard/users', label: 'Users', icon: '👥', description: 'Manage all users' },
@@ -100,13 +100,13 @@ export default function Sidebar() {
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Welcome, {user.name || 'User'}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user.type || 'user'}</p>
-                  {user.skill && (
-                    <p className="text-xs text-blue-600 font-medium">{user.skill}</p>
+                  <p className="text-sm font-medium text-gray-900">Welcome, {user.username || 'User'}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user.role || 'user'}</p>
+                  {user.specialization && (
+                    <p className="text-xs text-blue-600 font-medium">{user.specialization}</p>
                   )}
                 </div>
               </div>

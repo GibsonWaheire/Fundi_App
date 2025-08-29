@@ -11,12 +11,12 @@ export default function FundiDashboard() {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.name}!</h1>
+            <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.username}!</h1>
             <p className="text-blue-100">Ready to tackle today's jobs?</p>
             <div className="mt-3 flex items-center space-x-4">
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                {user?.skill} • Rating: {user?.rating}/5.0
-              </span>
+                              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  {user?.specialization} • Rating: {user?.rating}/5.0
+                </span>
               <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                 Available for work
               </span>

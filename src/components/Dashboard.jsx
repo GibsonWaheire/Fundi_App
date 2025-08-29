@@ -24,9 +24,9 @@ export default function Dashboard() {
         <div className="dashboard-content">
           {isMainDashboard ? (
             <>
-              {user?.type === 'fundi' && <FundiDashboard />}
-              {user?.type === 'admin' && <AdminDashboard />}
-              {(!user?.type || user?.type === 'customer') && <ClientDashboard />}
+              {user?.role === 'fundi' && <FundiDashboard />}
+              {user?.role === 'admin' && <AdminDashboard />}
+              {(!user?.role || user?.role === 'client') && <ClientDashboard />}
             </>
           ) : (
             <Outlet />

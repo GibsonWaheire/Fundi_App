@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Home from './components/Home'
 import Dashboard from './components/Dashboard'
 import FundiProfile from './components/FundiProfile'
+import FundiPage from './components/FundiPage'
 import About from './components/About'
 import Contact from './components/Contact'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -53,6 +54,7 @@ function AppContent() {
           <Route path="reports" element={<Reports />} />
         </Route>
         <Route path="/fundi-profile" element={<FundiProfile />} />
+        <Route path="/fundi" element={<FundiPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>

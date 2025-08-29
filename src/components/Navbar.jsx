@@ -69,6 +69,19 @@ const Navbar = () => {
                 )}
               </Link>
               <Link 
+                to="/fundi" 
+                className={`relative px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                  isActive('/fundi') 
+                    ? 'text-blue-600' 
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+              >
+                For Fundis
+                {isActive('/fundi') && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                )}
+              </Link>
+              <Link 
                 to="/about" 
                 className={`relative px-3 py-2 text-sm font-medium transition-all duration-200 ${
                   isActive('/about') 
@@ -100,7 +113,7 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">Welcome, {user.name}</span>
+                  <span className="text-sm text-gray-700">Welcome, {user.username}</span>
                   <Link
                     to="/dashboard"
                     className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
@@ -116,18 +129,39 @@ const Navbar = () => {
                 </div>
               ) : (
                 <>
-                  <button 
-                    onClick={() => setIsLoginOpen(true)}
-                    className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                  >
-                    Sign In
-                  </button>
-                  <button 
-                    onClick={() => setIsRegisterOpen(true)}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    Get Started
-                  </button>
+                  {isActive('/fundi') ? (
+                    // Fundi page buttons
+                    <>
+                      <button 
+                        onClick={() => setIsLoginOpen(true)}
+                        className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                      >
+                        Fundi Sign In
+                      </button>
+                      <button 
+                        onClick={() => setIsRegisterOpen(true)}
+                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        Join as Fundi
+                      </button>
+                    </>
+                  ) : (
+                    // Main site buttons
+                    <>
+                      <button 
+                        onClick={() => setIsLoginOpen(true)}
+                        className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                      >
+                        Sign In
+                      </button>
+                      <button 
+                        onClick={() => setIsRegisterOpen(true)}
+                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        Get Started
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -138,8 +172,8 @@ const Navbar = () => {
       {/* Spacer for fixed navbar */}
       <div className="h-20"></div>
 
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} allowFundis={isActive('/fundi')} />
+      <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} allowFundis={isActive('/fundi')} />
     </>
   )
 }

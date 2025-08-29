@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -20,6 +20,12 @@ const LoginModal = ({ isOpen, onClose }) => {
       const result = await authService.validateUser(formData.email, formData.password)
       
       if (result.success) {
+        // If fundis are not allowed and user is a fundi, show error
+        if (!allowFundis && result.user.role === 'fundi') {
+          setError('Fundis should sign in through the Fundi portal. Please visit /fundi to sign in.')
+          return
+        }
+        
         login(result.user)
         onClose()
       } else {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
-const RegisterModal = ({ isOpen, onClose }) => {
+const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -71,7 +71,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 I am a...
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid ${allowFundis ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                 <label className="relative cursor-pointer">
                   <input
                     type="radio"
@@ -91,6 +91,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     <div className="text-xs text-gray-500">I need fundis</div>
                   </div>
                 </label>
+                {allowFundis && (
                 <label className="relative cursor-pointer">
                   <input
                     type="radio"
@@ -110,6 +111,7 @@ const RegisterModal = ({ isOpen, onClose }) => {
                     <div className="text-xs text-gray-500">I provide services</div>
                   </div>
                 </label>
+                )}
               </div>
             </div>
 

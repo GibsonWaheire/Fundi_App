@@ -8,6 +8,8 @@ const FundiProfile = () => {
   const [selectedProfession, setSelectedProfession] = useState('all')
   const [selectedLocation, setSelectedLocation] = useState('all')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [showBookingModal, setShowBookingModal] = useState(false)
   const [hasPaid, setHasPaid] = useState(false)
   const [fundis, setFundis] = useState([])
   const [loading, setLoading] = useState(true)
@@ -38,8 +40,10 @@ const FundiProfile = () => {
           const fundiReviews = reviewsData.filter(review => review.fundi_id === fundi.id)
           
           // Convert hourly rate to daily rate (8 hours work day)
-          const dailyRate = Math.round(fundi.hourly_rate * 8)
-          const contractRate = Math.round(dailyRate * 3) // 3 days for small contract
+          // Ensure daily rate is between 1500-4000
+          let dailyRate = Math.round(fundi.hourly_rate * 8)
+          if (dailyRate < 1500) dailyRate = 1500
+          if (dailyRate > 4000) dailyRate = 4000
           
           return {
             id: fundi.id,
@@ -48,10 +52,9 @@ const FundiProfile = () => {
             rating: fundi.rating || 4.5,
             experience: fundi.experience,
             location: fundi.location,
-            // Real pricing structure based on hourly rate
+            // Real pricing structure - daily rate only
             dailyRate: `KSh ${dailyRate}`,
-            contractRate: `KSh ${contractRate}`,
-            pricingType: dailyRate <= 2000 ? 'daily' : 'contract', // Lower rates prefer daily
+            pricingType: 'daily', // All fundis use daily rates
             image: `/assets/fundi ${(fundi.id % 7) + 1}.${fundi.id % 2 === 0 ? 'webp' : 'jpeg'}`,
             skills: getSkillsBySpecialization(fundi.specialization),
             reviews: fundiReviews.length > 0 ? fundiReviews.map(review => ({
@@ -269,7 +272,7 @@ const FundiProfile = () => {
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                         <span>📍 {fundi.location}</span>
-                        <span>💰 {fundi.pricingType === 'daily' ? fundi.dailyRate + '/day' : fundi.contractRate + '/contract'}</span>
+                        <span>💰 {fundi.dailyRate}/day</span>
                       </div>
                     </div>
                   </div>
@@ -317,28 +320,26 @@ const FundiProfile = () => {
                       <div className="mb-6">
                         <div className="flex items-center gap-4">
                           <span className="text-2xl font-bold text-blue-600">
-                            {filteredFundis[selectedFundi].pricingType === 'daily' 
-                              ? filteredFundis[selectedFundi].dailyRate + '/day'
-                              : filteredFundis[selectedFundi].contractRate + '/contract'
-                            }
+                            {filteredFundis[selectedFundi].dailyRate}/day
                           </span>
                           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                            {filteredFundis[selectedFundi].pricingType === 'daily' ? 'Daily Rate' : 'Per Contract'}
+                            Daily Rate
                           </span>
                         </div>
-                        {filteredFundis[selectedFundi].pricingType === 'daily' && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            Also available: {filteredFundis[selectedFundi].contractRate} per contract
-                          </p>
-                        )}
                       </div>
                       <div className="flex space-x-4">
                         {hasPaid ? (
                           <>
-                            <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                            <button 
+                              onClick={() => setShowContactModal(true)}
+                              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                            >
                               📞 Contact Now
                             </button>
-                            <button className="px-8 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-200">
+                            <button 
+                              onClick={() => setShowBookingModal(true)}
+                              className="px-8 py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-200"
+                            >
                               📅 Book Appointment
                             </button>
                           </>
@@ -448,6 +449,149 @@ const FundiProfile = () => {
         amount={50}
         onPaymentSuccess={handlePaymentSuccess}
       />
+
+      {/* Contact Details Modal */}
+      {showContactModal && filteredFundis[selectedFundi] && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-3xl text-white mx-auto mb-4">
+                {filteredFundis[selectedFundi].profession === 'Plumbing' ? '🚰' : 
+                 filteredFundis[selectedFundi].profession === 'Electrical' ? '⚡' : 
+                 filteredFundis[selectedFundi].profession === 'Carpentry' ? '🪑' : 
+                 filteredFundis[selectedFundi].profession === 'Painting' ? '🎨' : '🔧'}
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{filteredFundis[selectedFundi].name}</h3>
+              <p className="text-gray-600 mb-6">{filteredFundis[selectedFundi].profession}</p>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">📞 Phone:</span>
+                  <span className="font-medium">{filteredFundis[selectedFundi].phone}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">📧 Email:</span>
+                  <span className="font-medium">{filteredFundis[selectedFundi].email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">📍 Location:</span>
+                  <span className="font-medium">{filteredFundis[selectedFundi].location}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">💰 Daily Rate:</span>
+                  <span className="font-medium">{filteredFundis[selectedFundi].dailyRate}</span>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <p className="text-green-800 text-sm">
+                  💡 <strong>Tip:</strong> Save these contact details! You can now call or email this fundi directly.
+                </p>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowContactModal(false)
+                    setShowBookingModal(true)
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Book Appointment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {showBookingModal && filteredFundis[selectedFundi] && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Book Appointment</h3>
+              <p className="text-gray-600">Schedule a session with {filteredFundis[selectedFundi].name}</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                <input
+                  type="text"
+                  value={filteredFundis[selectedFundi].profession}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  placeholder="Describe your project or issue..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                <input
+                  type="text"
+                  placeholder="Your address or location"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Date</label>
+                <input
+                  type="date"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Days</label>
+                <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="1">1 day</option>
+                  <option value="2">2 days</option>
+                  <option value="3">3 days</option>
+                  <option value="4">4 days</option>
+                  <option value="5">5 days</option>
+                  <option value="6">6 days</option>
+                  <option value="7">1 week</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex space-x-3">
+              <button
+                onClick={() => setShowBookingModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle booking submission
+                  alert('Booking request sent! The fundi will contact you soon.')
+                  setShowBookingModal(false)
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Send Booking Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

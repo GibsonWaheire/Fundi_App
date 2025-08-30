@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
@@ -12,6 +13,7 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,6 +32,8 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
       })
       setIsLoading(false)
       onClose()
+      // Redirect to dashboard after successful registration
+      navigate('/dashboard')
     }, 1500)
   }
 

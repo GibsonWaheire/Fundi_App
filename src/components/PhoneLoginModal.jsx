@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPayment = false }) {
@@ -6,6 +7,7 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,6 +40,8 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
         onSuccess(userData)
       } else {
         onClose()
+        // Redirect to dashboard after successful phone login
+        navigate('/dashboard')
       }
     } catch (err) {
       setError('Failed to verify phone number. Please try again.')

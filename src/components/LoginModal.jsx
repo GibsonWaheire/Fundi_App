@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
 
@@ -10,6 +11,7 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -28,6 +30,8 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
         
         login(result.user)
         onClose()
+        // Redirect to dashboard after successful login
+        navigate('/dashboard')
       } else {
         setError(result.error)
       }

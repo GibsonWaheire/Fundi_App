@@ -1,14 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentSuccess }) => {
+const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentSuccess, phoneNumber: initialPhoneNumber }) => {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState(null)
+  const [error, setError] = useState('')
+
+  // Set initial phone number if provided
+  useEffect(() => {
+    if (initialPhoneNumber) {
+      setPhoneNumber(initialPhoneNumber.replace('+254', ''))
+    }
+  }, [initialPhoneNumber])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!phoneNumber || phoneNumber.length < 10) {
-      alert('Please enter a valid phone number')
+    setError('')
+    
+    // Validate phone number
+    if (!phoneNumber || phoneNumber.length < 9) {
+      setError('Please enter a valid phone number (9 digits)')
+      return
+    }
+    
+    if (!phoneNumber.startsWith('7')) {
+      setError('Phone number must start with 7')
       return
     }
 
@@ -24,6 +40,8 @@ const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentS
       setTimeout(() => {
         onClose()
         setPaymentStatus(null)
+        setPhoneNumber('')
+        setError('')
         if (onPaymentSuccess) {
           onPaymentSuccess()
         }
@@ -71,40 +89,54 @@ const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentS
           <form onSubmit={handleSubmit} className="px-8 pb-8">
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Phone Number (M-Pesa)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
                     +254
                   </span>
                   <input
                     type="tel"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 9)
+                      setPhoneNumber(value)
+                      setError('')
+                    }}
+                    className="w-full pl-16 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 text-lg"
                     placeholder="7XX XXX XXX"
+                    maxLength="9"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter the phone number registered with M-Pesa
+                {error && (
+                  <p className="text-xs text-red-600 mt-2 flex items-center">
+                    <span className="mr-1">⚠️</span>
+                    {error}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  Enter the phone number registered with M-Pesa (9 digits starting with 7)
                 </p>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Profile Access</span>
-                  <span className="text-sm font-medium text-gray-900">KSh {amount}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">M-Pesa Fee</span>
-                  <span className="text-sm font-medium text-gray-900">KSh 0</span>
-                </div>
-                <div className="border-t border-gray-200 pt-2 mt-2">
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-4">Payment Summary</h4>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-gray-900">Total</span>
-                    <span className="font-bold text-lg text-green-600">KSh {amount}</span>
+                    <span className="text-sm text-gray-600">Profile Access</span>
+                    <span className="text-sm font-medium text-gray-900">KSh {amount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">M-Pesa Fee</span>
+                    <span className="text-sm font-medium text-gray-900">KSh 0</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3 mt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-gray-900">Total Amount</span>
+                      <span className="font-bold text-lg text-green-600">KSh {amount}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -112,22 +144,30 @@ const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentS
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-lg"
               >
                 {isProcessing ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
                     Processing Payment...
                   </div>
                 ) : (
-                  'Pay with M-Pesa'
+                  <div className="flex items-center justify-center">
+                    <span className="mr-2">📱</span>
+                    Pay with M-Pesa
+                  </div>
                 )}
               </button>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <p className="text-xs text-gray-500">
                   You will receive an M-Pesa STK push notification on your phone
                 </p>
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <p className="text-xs text-blue-800">
+                    💡 <strong>Tip:</strong> Make sure your phone has network coverage and M-Pesa is active
+                  </p>
+                </div>
               </div>
             </div>
           </form>

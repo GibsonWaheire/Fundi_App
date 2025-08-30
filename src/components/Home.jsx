@@ -1,11 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import RegisterModal from './RegisterModal'
 
 const Home = () => {
   const [currentImage, setCurrentImage] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const { user } = useAuth()
+  const navigate = useNavigate()
   
   const heroImages = [
     'https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
@@ -15,12 +18,18 @@ const Home = () => {
   ]
 
   useEffect(() => {
+    // Redirect logged-in users to dashboard
+    if (user) {
+      navigate('/dashboard')
+      return
+    }
+    
     setIsVisible(true)
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % heroImages.length)
     }, 8000)
     return () => clearInterval(interval)
-  }, [heroImages.length])
+  }, [heroImages.length, user, navigate])
 
   const handleFindFundis = () => {
     window.location.href = '/fundi-profile'

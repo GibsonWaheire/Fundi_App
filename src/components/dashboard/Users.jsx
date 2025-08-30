@@ -1,79 +1,70 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { authService } from '../../services/authService'
 
 export default function Users() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [users, setUsers] = useState([])
+  const [fundis, setFundis] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const users = [
-    {
-      id: 1,
-      name: 'John Kamau',
-      email: 'john@fundimatch.com',
-      phone: '+254 700 123 456',
-      type: 'fundi',
-      skill: 'Electrician',
-      status: 'active',
-      joined: '2024-12-15',
-      lastActive: '2025-01-20 14:30',
-      rating: 4.2,
-      jobsCompleted: 15
-    },
-    {
-      id: 2,
-      name: 'Mary Wanjiku',
-      email: 'mary@fundimatch.com',
-      phone: '+254 700 234 567',
-      type: 'fundi',
-      skill: 'Plumber',
-      status: 'active',
-      joined: '2024-11-20',
-      lastActive: '2025-01-20 16:45',
-      rating: 4.5,
-      jobsCompleted: 22
-    },
-    {
-      id: 3,
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      phone: '+254 700 345 678',
-      type: 'customer',
-      status: 'active',
-      joined: '2024-12-01',
-      lastActive: '2025-01-20 12:15',
-      jobsPosted: 8,
-      totalSpent: 'KES 45,000'
-    },
-    {
-      id: 4,
-      name: 'Mike Ochieng',
-      email: 'mike@example.com',
-      phone: '+254 700 456 789',
-      type: 'customer',
-      status: 'active',
-      joined: '2024-11-10',
-      lastActive: '2025-01-20 09:30',
-      jobsPosted: 12,
-      totalSpent: 'KES 78,000'
-    },
-    {
-      id: 5,
-      name: 'Peter Mwangi',
-      email: 'peter@fundimatch.com',
-      phone: '+254 700 567 890',
-      type: 'fundi',
-      skill: 'Mason',
-      status: 'inactive',
-      joined: '2024-10-15',
-      lastActive: '2025-01-15 18:20',
-      rating: 3.8,
-      jobsCompleted: 8
+  // Check if user is admin
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      return
     }
+  }, [user])
+
+  // Fetch real data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || user.role !== 'admin') return
+      
+      try {
+        const [usersData, fundisData] = await Promise.all([
+          authService.getAllUsers(),
+          authService.getAllFundisForAdmin()
+        ])
+        
+        setUsers(usersData)
+        setFundis(fundisData)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [user])
+
+  // Combine users and fundis for display
+  const allUsers = [
+    ...users.map(u => ({ 
+      ...u, 
+      type: 'customer',
+      status: u.is_active ? 'active' : 'inactive',
+      joined: u.created_at,
+      lastActive: 'Today',
+      jobsPosted: 0,
+      totalSpent: 'KES 0'
+    })),
+    ...fundis.map(f => ({ 
+      ...f, 
+      type: 'fundi', 
+      skill: f.specialization,
+      status: f.is_active ? 'active' : 'inactive',
+      joined: f.created_at,
+      lastActive: 'Today',
+      jobsCompleted: 0, // Will be calculated from bookings
+      rating: f.rating || 0
+    }))
   ]
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = allUsers.filter(user => {
+    const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesTab = activeTab === 'all' || user.type === activeTab
     return matchesSearch && matchesTab
@@ -92,6 +83,29 @@ export default function Users() {
     }
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading users...</span>
+      </div>
+    )
+  }
+
+  // Check if user is admin
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h3>
+          <p className="text-gray-600">You don't have permission to view this page.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -101,11 +115,11 @@ export default function Users() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">User Management</h1>
             <p className="text-gray-600">Monitor and manage all platform users</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900">{users.length}</div>
-              <div className="text-sm text-gray-600">Total Users</div>
-            </div>
+                      <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-gray-900">{allUsers.length}</div>
+                <div className="text-sm text-gray-600">Total Users</div>
+              </div>
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Add User
             </button>
@@ -125,7 +139,7 @@ export default function Users() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              All Users ({users.length})
+              All Users ({allUsers.length})
             </button>
             <button
               onClick={() => setActiveTab('fundi')}
@@ -135,7 +149,7 @@ export default function Users() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Fundis ({users.filter(u => u.type === 'fundi').length})
+              Fundis ({allUsers.filter(u => u.type === 'fundi').length})
             </button>
             <button
               onClick={() => setActiveTab('customer')}
@@ -145,7 +159,7 @@ export default function Users() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Customers ({users.filter(u => u.type === 'customer').length})
+              Customers ({allUsers.filter(u => u.type === 'customer').length})
             </button>
           </div>
           <div className="relative">
@@ -196,10 +210,10 @@ export default function Users() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                        {user.name.charAt(0)}
+                        {user.username?.charAt(0) || user.email.charAt(0)}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{user.username || 'User'}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                         <div className="text-xs text-gray-400">{user.phone}</div>
                       </div>

@@ -32,7 +32,7 @@ const Home = () => {
   }, [heroImages.length, user, navigate])
 
   const handleFindFundis = () => {
-    window.location.href = '/fundi-profile'
+    window.location.href = '/find-fundis'
   }
 
   const handlePostJob = () => {

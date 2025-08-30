@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { authService } from '../services/authService'
 
 const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,12 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
     password: '',
     confirmPassword: '',
     phone: '',
-    userType: 'client'
+    userType: 'client',
+    specialization: 'General',
+    experience: '1 year',
+    location: 'Nairobi',
+    bio: '',
+    hourly_rate: 1000
   })
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -21,22 +27,61 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
     e.preventDefault()
     setIsLoading(true)
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Registration attempt:', formData)
-      // Simulate successful registration and login
-      login({
-        id: 1,
-        email: formData.email,
-        name: formData.name,
-        type: formData.userType,
-        phone: formData.phone
-      })
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match')
       setIsLoading(false)
-      onClose()
-      // Redirect to dashboard after successful registration
-      navigate('/dashboard')
-    }, 1500)
+      return
+    }
+
+    // Check if email already exists
+    const existingUser = await authService.getUserByEmail(formData.email)
+    if (existingUser) {
+      alert('Email already registered. Please use a different email or sign in.')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      let result
+      if (formData.userType === 'fundi') {
+        // Register fundi
+        result = await authService.registerFundi({
+          username: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          specialization: formData.specialization || 'General',
+          experience: formData.experience || '1 year',
+          location: formData.location || 'Nairobi',
+          bio: formData.bio || 'Professional fundi',
+          hourly_rate: formData.hourly_rate || 1000
+        })
+      } else {
+        // Register client
+        result = await authService.registerUser({
+          username: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone
+        })
+      }
+
+      if (result.success) {
+        login(result.user)
+        setIsLoading(false)
+        onClose()
+        // Redirect to dashboard after successful registration
+        navigate('/dashboard')
+      } else {
+        alert(result.error || 'Registration failed')
+        setIsLoading(false)
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      alert('Registration failed. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -165,6 +210,102 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
                 required
               />
             </div>
+
+            {/* Fundi-specific fields */}
+            {formData.userType === 'fundi' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Specialization
+                  </label>
+                  <select
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  >
+                    <option value="Plumbing">Plumbing</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Carpentry">Carpentry</option>
+                    <option value="Painting">Painting</option>
+                    <option value="Construction">Construction</option>
+                    <option value="Cleaning">Cleaning</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Experience
+                  </label>
+                  <select
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  >
+                    <option value="1 year">1 year</option>
+                    <option value="2 years">2 years</option>
+                    <option value="3 years">3 years</option>
+                    <option value="4 years">4 years</option>
+                    <option value="5 years">5 years</option>
+                    <option value="6+ years">6+ years</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <select
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  >
+                    <option value="Nairobi">Nairobi</option>
+                    <option value="Mombasa">Mombasa</option>
+                    <option value="Kisumu">Kisumu</option>
+                    <option value="Nakuru">Nakuru</option>
+                    <option value="Eldoret">Eldoret</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hourly Rate (KSh)
+                  </label>
+                  <input
+                    type="number"
+                    name="hourly_rate"
+                    value={formData.hourly_rate}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                    placeholder="Enter your hourly rate"
+                    min="500"
+                    max="5000"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                    placeholder="Tell us about your skills and experience..."
+                    rows="3"
+                    required
+                  />
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

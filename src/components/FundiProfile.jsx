@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import MpesaPaymentModal from './MpesaPaymentModal'
 
 const FundiProfile = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [selectedFundi, setSelectedFundi] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProfession, setSelectedProfession] = useState('all')
@@ -16,6 +19,7 @@ const FundiProfile = () => {
 
   // Fetch fundis data from API
   useEffect(() => {
+
     const fetchFundis = async () => {
       try {
         // Fetch fundis, bookings, and reviews data
@@ -343,12 +347,22 @@ const FundiProfile = () => {
                               📅 Book Appointment
                             </button>
                           </>
-                        ) : (
+                        ) : user ? (
                           <button 
                             onClick={() => setShowPaymentModal(true)}
                             className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
                           >
                             💳 Pay KSh 50 to View Full Profile
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => {
+                              alert('Please sign up to view fundi contact details.')
+                              window.location.href = '/'
+                            }}
+                            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                          >
+                            📝 Sign Up to View Contact
                           </button>
                         )}
                       </div>
@@ -385,7 +399,7 @@ const FundiProfile = () => {
                           </span>
                         ))}
                       </div>
-                    ) : (
+                    ) : user ? (
                       <div className="text-center py-8">
                         <div className="text-4xl mb-4">🔒</div>
                         <h4 className="text-lg font-semibold text-gray-900 mb-2">Skills & Reviews Locked</h4>
@@ -395,6 +409,21 @@ const FundiProfile = () => {
                           className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
                         >
                           💳 Unlock Full Profile
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="text-4xl mb-4">🔒</div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Skills & Reviews Locked</h4>
+                        <p className="text-gray-600 mb-4">Sign up to unlock detailed skills, reviews, and contact information</p>
+                        <button 
+                          onClick={() => {
+                            alert('Please sign up to view fundi details.')
+                            window.location.href = '/'
+                          }}
+                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        >
+                          📝 Sign Up to Unlock
                         </button>
                       </div>
                     )}

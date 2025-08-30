@@ -1,19 +1,33 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import PhoneLoginModal from './PhoneLoginModal'
-import MpesaPaymentModal from './MpesaPaymentModal'
+import { authService } from '../services/authService'
 
 export default function PublicFindFundis() {
   const { user } = useAuth()
-  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [selectedFundi, setSelectedFundi] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedService, setSelectedService] = useState('all')
   const [selectedLocation, setSelectedLocation] = useState('all')
   const [showContactModal, setShowContactModal] = useState(false)
-  const [userData, setUserData] = useState(null)
+  const [fundis, setFundis] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch fundis data
+  useEffect(() => {
+    const fetchFundis = async () => {
+      try {
+        const fundisData = await authService.getAllFundis()
+        setFundis(fundisData)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching fundis:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchFundis()
+  }, [])
 
   const services = [
     { id: 'all', name: 'All Services', icon: '🔧' },
@@ -34,104 +48,49 @@ export default function PublicFindFundis() {
     { id: 'eldoret', name: 'Eldoret' }
   ]
 
-  const fundis = [
-    {
-      id: 1,
-      name: 'John Kamau',
-      service: 'Plumbing',
-      location: 'Nairobi, Westlands',
-      rating: 4.8,
-      reviews: 127,
-      hourlyRate: 'KSh 800',
-      experience: '5+ years',
-      verified: true,
-      available: true,
-      avatar: '👷',
-      specialties: ['Pipe Repair', 'Drainage', 'Installation'],
-      phone: '+254 700 123 456',
-      email: 'john.kamau@email.com'
-    },
-    {
-      id: 2,
-      name: 'Sarah Wanjiku',
-      service: 'Painting',
-      location: 'Nairobi, Karen',
-      rating: 4.9,
-      reviews: 89,
-      hourlyRate: 'KSh 600',
-      experience: '3+ years',
-      verified: true,
-      available: true,
-      avatar: '🎨',
-      specialties: ['Interior', 'Exterior', 'Wallpaper'],
-      phone: '+254 700 234 567',
-      email: 'sarah.wanjiku@email.com'
-    },
-    {
-      id: 3,
-      name: 'Mike Ochieng',
-      service: 'Electrical',
-      location: 'Nairobi, Kilimani',
-      rating: 4.7,
-      reviews: 156,
-      hourlyRate: 'KSh 1,000',
-      experience: '7+ years',
-      verified: true,
-      available: false,
-      avatar: '⚡',
-      specialties: ['Wiring', 'Installation', 'Repairs'],
-      phone: '+254 700 345 678',
-      email: 'mike.ochieng@email.com'
-    },
-    {
-      id: 4,
-      name: 'David Mwangi',
-      service: 'Construction',
-      location: 'Nairobi, Lavington',
-      rating: 4.6,
-      reviews: 203,
-      hourlyRate: 'KSh 1,200',
-      experience: '8+ years',
-      verified: true,
-      available: true,
-      avatar: '🏗️',
-      specialties: ['Renovation', 'Foundation', 'Roofing'],
-      phone: '+254 700 456 789',
-      email: 'david.mwangi@email.com'
-    },
-    {
-      id: 5,
-      name: 'Grace Akinyi',
-      service: 'Carpentry',
-      location: 'Nairobi, Westlands',
-      rating: 4.9,
-      reviews: 67,
-      hourlyRate: 'KSh 700',
-      experience: '4+ years',
-      verified: true,
-      available: true,
-      avatar: '🪑',
-      specialties: ['Furniture', 'Cabinets', 'Repairs'],
-      phone: '+254 700 567 890',
-      email: 'grace.akinyi@email.com'
-    },
-    {
-      id: 6,
-      name: 'Peter Njoroge',
-      service: 'Cleaning',
-      location: 'Nairobi, Kilimani',
-      rating: 4.5,
-      reviews: 134,
-      hourlyRate: 'KSh 500',
-      experience: '6+ years',
-      verified: true,
-      available: true,
-      avatar: '🧹',
-      specialties: ['Deep Cleaning', 'Post-Construction', 'Regular'],
-      phone: '+254 700 678 901',
-      email: 'peter.njoroge@email.com'
+  // Transform fundis data for display
+  const transformedFundis = fundis.map(fundi => ({
+    id: fundi.id,
+    name: fundi.username,
+    service: fundi.specialization,
+    location: fundi.location,
+    rating: fundi.rating || 4.5,
+    reviews: 0, // Will be calculated from reviews
+    hourlyRate: `KSh ${fundi.hourly_rate}`,
+    experience: fundi.experience,
+    verified: fundi.is_active,
+    available: fundi.is_available,
+    avatar: getAvatarBySpecialization(fundi.specialization),
+    specialties: getSpecialtiesBySpecialization(fundi.specialization),
+    phone: fundi.phone,
+    email: fundi.email
+  }))
+
+  // Helper function to get avatar by specialization
+  const getAvatarBySpecialization = (specialization) => {
+    const avatars = {
+      'Plumbing': '🚰',
+      'Electrical': '⚡',
+      'Carpentry': '🪑',
+      'Painting': '🎨',
+      'Construction': '🏗️',
+      'Cleaning': '🧹'
     }
-  ]
+    return avatars[specialization] || '🔧'
+  }
+
+  // Helper function to get specialties by specialization
+  const getSpecialtiesBySpecialization = (specialization) => {
+    const specialties = {
+      'Plumbing': ['Pipe Repair', 'Drainage', 'Installation'],
+      'Electrical': ['Wiring', 'Installation', 'Repairs'],
+      'Carpentry': ['Furniture', 'Cabinets', 'Repairs'],
+      'Painting': ['Interior', 'Exterior', 'Wallpaper'],
+      'Construction': ['Renovation', 'Foundation', 'Roofing'],
+      'Cleaning': ['Deep Cleaning', 'Post-Construction', 'Regular']
+    }
+    return specialties[specialization] || ['General Repairs']
+  }
 
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
@@ -139,21 +98,13 @@ export default function PublicFindFundis() {
       // If user is logged in, show contact directly
       setShowContactModal(true)
     } else {
-      // If not logged in, require payment
-      setIsPhoneModalOpen(true)
+      // If not logged in, redirect to sign up
+      alert('Please sign up to view fundi contact details.')
+      window.location.href = '/'
     }
   }
 
-  const handlePhoneSuccess = (user) => {
-    setUserData(user)
-    setIsPhoneModalOpen(false)
-    setIsPaymentModalOpen(true)
-  }
 
-  const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false)
-    setShowContactModal(true)
-  }
 
   const handleSignUpPrompt = () => {
     setShowContactModal(false)
@@ -161,7 +112,7 @@ export default function PublicFindFundis() {
     window.location.href = user ? '/dashboard' : '/'
   }
 
-  const filteredFundis = fundis.filter(fundi => {
+  const filteredFundis = transformedFundis.filter(fundi => {
     const matchesSearch = fundi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          fundi.service.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesService = selectedService === 'all' || fundi.service.toLowerCase() === selectedService
@@ -169,6 +120,18 @@ export default function PublicFindFundis() {
     
     return matchesSearch && matchesService && matchesLocation
   })
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading fundis...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -431,21 +394,7 @@ export default function PublicFindFundis() {
         </div>
       )}
 
-      {/* Modals */}
-      <PhoneLoginModal
-        isOpen={isPhoneModalOpen}
-        onClose={() => setIsPhoneModalOpen(false)}
-        onSuccess={handlePhoneSuccess}
-        showPayment={true}
-      />
 
-      <MpesaPaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        onSuccess={handlePaymentSuccess}
-        fundi={selectedFundi}
-        phoneNumber={userData?.phone}
-      />
     </div>
   )
 }

@@ -17,6 +17,7 @@ export default function PublicFindFundis() {
   const [fundis, setFundis] = useState([])
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState(null)
+  const [paidFundiId, setPaidFundiId] = useState(null) // Track which fundi was paid for
 
   // Fetch fundis data
   useEffect(() => {
@@ -99,11 +100,15 @@ export default function PublicFindFundis() {
 
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
+    
     if (user) {
       // If user is logged in, show contact directly
       setShowContactModal(true)
+    } else if (paidFundiId === fundi.id) {
+      // If this fundi was already paid for, show contact
+      setShowContactModal(true)
     } else {
-      // If not logged in, require payment
+      // If not logged in and not paid for this fundi, require payment
       setIsPhoneModalOpen(true)
     }
   }
@@ -116,6 +121,7 @@ export default function PublicFindFundis() {
 
   const handlePaymentSuccess = () => {
     setIsPaymentModalOpen(false)
+    setPaidFundiId(selectedFundi.id) // Mark this fundi as paid for
     setShowContactModal(true)
   }
 
@@ -160,7 +166,7 @@ export default function PublicFindFundis() {
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
               {user 
                 ? "Browse verified professionals in your area. As a registered user, you have free access to all contact details."
-                : "Browse verified professionals in your area. Pay KSh 50 to unlock contact details and get full access to their profiles."
+                : "Browse verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details. Each payment unlocks one fundi's contact information."
               }
             </p>
             <div className="flex items-center justify-center space-x-4">
@@ -182,6 +188,26 @@ export default function PublicFindFundis() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Payment Info for Non-Authenticated Users */}
+        {!user && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8 border border-blue-200">
+            <div className="flex items-start">
+              <span className="text-2xl mr-4">💡</span>
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">How It Works</h3>
+                <p className="text-blue-800 text-sm mb-3">
+                  Pay KSh 50 per fundi to unlock their contact details. Each payment gives you access to one fundi's phone number and email.
+                </p>
+                <div className="flex items-center space-x-4 text-xs text-blue-700">
+                  <span>💳 Pay per fundi</span>
+                  <span>📞 Get contact details</span>
+                  <span>🔒 Others remain locked</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-12">
           <div className="text-center mb-6">
@@ -268,11 +294,18 @@ export default function PublicFindFundis() {
                       <p className="text-blue-100">{fundi.service}</p>
                     </div>
                   </div>
-                  {fundi.verified && (
-                    <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                      ✅ Verified
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {fundi.verified && (
+                      <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                        ✅ Verified
+                      </span>
+                    )}
+                    {!user && paidFundiId === fundi.id && (
+                      <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                        💳 Paid
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Status */}
@@ -341,10 +374,17 @@ export default function PublicFindFundis() {
                   className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
                     user 
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                      : paidFundiId === fundi.id
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                       : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
                   } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
                 >
                   {user ? (
+                    <span className="flex items-center justify-center">
+                      <span className="mr-2">📞</span>
+                      View Contact Details
+                    </span>
+                  ) : paidFundiId === fundi.id ? (
                     <span className="flex items-center justify-center">
                       <span className="mr-2">📞</span>
                       View Contact Details
@@ -483,6 +523,11 @@ export default function PublicFindFundis() {
                 <p className="text-green-800 text-sm text-center">
                   ✅ <strong>Payment Successful!</strong> You can now contact this fundi directly.
                 </p>
+                {!user && (
+                  <p className="text-green-700 text-xs text-center mt-2">
+                    💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}

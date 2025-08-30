@@ -53,24 +53,6 @@ export default function PublicFindFundis() {
     { id: 'eldoret', name: 'Eldoret' }
   ]
 
-  // Transform fundis data for display
-  const transformedFundis = fundis.map(fundi => ({
-    id: fundi.id,
-    name: fundi.username,
-    service: fundi.specialization,
-    location: fundi.location,
-    rating: fundi.rating || 4.5,
-    reviews: 0, // Will be calculated from reviews
-    hourlyRate: `KSh ${fundi.hourly_rate}`,
-    experience: fundi.experience,
-    verified: fundi.is_active,
-    available: fundi.is_available !== false, // Default to true if not explicitly false
-    avatar: getAvatarBySpecialization(fundi.specialization),
-    specialties: getSpecialtiesBySpecialization(fundi.specialization),
-    phone: fundi.phone,
-    email: fundi.email
-  }))
-
   // Helper function to get avatar by specialization
   const getAvatarBySpecialization = (specialization) => {
     const avatars = {
@@ -96,6 +78,24 @@ export default function PublicFindFundis() {
     }
     return specialties[specialization] || ['General Repairs']
   }
+
+  // Transform fundis data for display
+  const transformedFundis = fundis.map(fundi => ({
+    id: fundi.id,
+    name: fundi.username,
+    service: fundi.specialization,
+    location: fundi.location,
+    rating: fundi.rating || 4.5,
+    reviews: 0, // Will be calculated from reviews
+    hourlyRate: `KSh ${fundi.hourly_rate}`,
+    experience: fundi.experience,
+    verified: fundi.is_active,
+    available: fundi.is_available !== false, // Default to true if not explicitly false
+    avatar: getAvatarBySpecialization(fundi.specialization),
+    specialties: getSpecialtiesBySpecialization(fundi.specialization),
+    phone: fundi.phone,
+    email: fundi.email
+  }))
 
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)

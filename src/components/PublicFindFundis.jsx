@@ -150,27 +150,30 @@ export default function PublicFindFundis() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">FundiMatch</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Back to Home
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              Find Your Perfect Fundi
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+              {user 
+                ? "Browse verified professionals in your area. As a registered user, you have free access to all contact details."
+                : "Browse verified professionals in your area. Pay KSh 50 to unlock contact details and get full access to their profiles."
+              }
+            </p>
+            <div className="flex items-center justify-center space-x-4">
+              <Link to="/" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300">
+                ← Back to Home
               </Link>
               {user ? (
-                <Link to="/dashboard" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Dashboard
+                <Link to="/dashboard" className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-all duration-300">
+                  Go to Dashboard
                 </Link>
               ) : (
-                <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Sign Up / Sign In
+                <Link to="/" className="px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-all duration-300">
+                  Sign Up Free
                 </Link>
               )}
             </div>
@@ -178,39 +181,34 @@ export default function PublicFindFundis() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Find Trusted Fundis
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {user 
-              ? "Browse verified professionals in your area. As a registered user, you have free access to all contact details."
-              : "Browse verified professionals in your area. Pay once to unlock contact details and get full access to their profiles."
-            }
-          </p>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Fundis</label>
-              <input
-                type="text"
-                placeholder="Search by name, service, or location..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-12">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Search & Filter</h2>
+            <p className="text-gray-600">Find the perfect fundi for your project</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Search Fundis</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search by name, service, or location..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200"
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Service Type</label>
               <select
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200"
               >
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
@@ -220,11 +218,11 @@ export default function PublicFindFundis() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Location</label>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200"
               >
                 {locations.map(location => (
                   <option key={location.id} value={location.id}>
@@ -237,84 +235,127 @@ export default function PublicFindFundis() {
         </div>
 
         {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Found <span className="font-semibold text-gray-900">{filteredFundis.length}</span> fundis
-          </p>
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Found <span className="text-blue-600">{filteredFundis.length}</span> fundis
+                </h3>
+                <p className="text-gray-600">Ready to help with your project</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{filteredFundis.length}</div>
+                <div className="text-sm text-gray-500">Available</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Fundis Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredFundis.map((fundi) => (
-            <div key={fundi.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
-              <div className="p-6">
-                {/* Header */}
+            <div key={fundi.id} className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              {/* Header with gradient */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl text-white">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-3xl">
                       {fundi.avatar}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{fundi.name}</h3>
-                      <p className="text-sm text-gray-600">{fundi.service}</p>
+                      <h3 className="text-xl font-bold">{fundi.name}</h3>
+                      <p className="text-blue-100">{fundi.service}</p>
                     </div>
                   </div>
                   {fundi.verified && (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                    <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
                       ✅ Verified
                     </span>
                   )}
                 </div>
+                
+                {/* Status */}
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm px-3 py-1 rounded-full ${
+                    fundi.available 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {fundi.available ? '🟢 Available Now' : '🔴 Currently Busy'}
+                  </span>
+                  <div className="flex items-center text-yellow-300">
+                    <span className="text-lg mr-1">⭐</span>
+                    <span className="font-semibold">{fundi.rating}</span>
+                  </div>
+                </div>
+              </div>
 
-                {/* Details */}
-                <div className="space-y-3 mb-4">
+              {/* Content */}
+              <div className="p-6">
+                {/* Key Details */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="text-center p-3 bg-gray-50 rounded-xl">
+                    <div className="text-2xl mb-1">📍</div>
+                    <div className="text-sm font-medium text-gray-900">{fundi.location}</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-xl">
+                    <div className="text-2xl mb-1">💰</div>
+                    <div className="text-sm font-medium text-green-600">{fundi.hourlyRate}</div>
+                  </div>
+                </div>
+
+                {/* Experience */}
+                <div className="mb-6">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">📍 Location</span>
-                    <span className="font-medium">{fundi.location}</span>
+                    <span className="text-gray-600">Experience</span>
+                    <span className="font-semibold text-gray-900">{fundi.experience}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">⭐ Rating</span>
-                    <span className="font-medium">{fundi.rating} ({fundi.reviews} reviews)</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">💰 Hourly Rate</span>
-                    <span className="font-medium text-green-600">{fundi.hourlyRate}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">📅 Experience</span>
-                    <span className="font-medium">{fundi.experience}</span>
+                    <span className="text-gray-600">Reviews</span>
+                    <span className="font-semibold text-gray-900">{fundi.reviews} reviews</span>
                   </div>
                 </div>
 
                 {/* Specialties */}
-                <div className="mb-4">
-                  <p className="text-xs text-gray-600 mb-2">Specialties:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {fundi.specialties.map((specialty, index) => (
-                      <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                <div className="mb-6">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Specialties</p>
+                  <div className="flex flex-wrap gap-2">
+                    {fundi.specialties.slice(0, 3).map((specialty, index) => (
+                      <span key={index} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
                         {specialty}
                       </span>
                     ))}
+                    {fundi.specialties.length > 3 && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                        +{fundi.specialties.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Status and Action */}
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm px-2 py-1 rounded-full ${
-                    fundi.available 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {fundi.available ? '🟢 Available' : '🔴 Busy'}
-                  </span>
-                  <button
-                    onClick={() => handleViewContact(fundi)}
-                    disabled={!fundi.available}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {user ? 'View Contact' : 'View Contact (KSh 50)'}
-                  </button>
-                </div>
+                {/* Action Button */}
+                <button
+                  onClick={() => handleViewContact(fundi)}
+                  disabled={!fundi.available}
+                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                    user 
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+                >
+                  {user ? (
+                    <span className="flex items-center justify-center">
+                      <span className="mr-2">📞</span>
+                      View Contact Details
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <span className="mr-2">💳</span>
+                      Pay KSh 50 to View Contact
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
           ))}
@@ -361,48 +402,116 @@ export default function PublicFindFundis() {
 
       {/* Contact Details Modal */}
       {showContactModal && selectedFundi && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-3xl text-white mx-auto mb-4">
-                {selectedFundi.avatar}
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedFundi.name}</h3>
-              <p className="text-gray-600 mb-6">{selectedFundi.service}</p>
-              
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">📞 Phone:</span>
-                  <span className="font-medium">{selectedFundi.phone}</span>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white rounded-t-3xl">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                  {selectedFundi.avatar}
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">📧 Email:</span>
-                  <span className="font-medium">{selectedFundi.email}</span>
+                <h3 className="text-3xl font-bold mb-2">{selectedFundi.name}</h3>
+                <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
+                <div className="flex items-center justify-center mt-4">
+                  <span className="text-yellow-300 text-lg mr-2">⭐</span>
+                  <span className="font-semibold">{selectedFundi.rating} ({selectedFundi.reviews} reviews)</span>
                 </div>
               </div>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <p className="text-green-800 text-sm">
-                  {user 
-                    ? "💡 <strong>Tip:</strong> You can manage all your bookings and payments from your dashboard."
-                    : "💡 <strong>Tip:</strong> Save these contact details! You can also sign up for free to access more fundi profiles and manage your projects."
-                  }
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              {/* Contact Details */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📞</span>
+                    <span className="text-gray-600">Phone</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">{selectedFundi.phone}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📧</span>
+                    <span className="text-gray-600">Email</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">{selectedFundi.email}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📍</span>
+                    <span className="text-gray-600">Location</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">{selectedFundi.location}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">💰</span>
+                    <span className="text-gray-600">Rate</span>
+                  </div>
+                  <span className="font-semibold text-green-600">{selectedFundi.hourlyRate}</span>
+                </div>
+              </div>
+
+              {/* Booking Alert for Non-Authenticated Users */}
+              {!user && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+                  <div className="flex items-start">
+                    <span className="text-2xl mr-3">💡</span>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-2">Want to Book an Appointment?</h4>
+                      <p className="text-blue-800 text-sm mb-4">
+                        To book appointments, manage your projects, and access more features, you'll need to sign up for a free account.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setShowContactModal(false)
+                          alert('Please sign up to book appointments and manage your projects!')
+                          window.location.href = '/'
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Sign Up Now - It's Free!
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Message */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <p className="text-green-800 text-sm text-center">
+                  ✅ <strong>Payment Successful!</strong> You can now contact this fundi directly.
                 </p>
               </div>
-              
-              <div className="flex space-x-3">
+
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
                 <button
                   onClick={() => setShowContactModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
                 >
                   Close
                 </button>
-                <button
-                  onClick={handleSignUpPrompt}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {user ? 'Go to Dashboard' : 'Sign Up Now'}
-                </button>
+                {user ? (
+                  <Link
+                    to="/dashboard"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-center"
+                  >
+                    Go to Dashboard
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowContactModal(false)
+                      alert('Please sign up to access more features!')
+                      window.location.href = '/'
+                    }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+                  >
+                    Sign Up Free
+                  </button>
+                )}
               </div>
             </div>
           </div>

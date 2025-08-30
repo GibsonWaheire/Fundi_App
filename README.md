@@ -2,6 +2,17 @@
 
 **FundiMatch** is a comprehensive platform that connects homeowners, tenants, and project managers in Kenya with verified and professional fundis (craft workers), contractors, and engineers. The platform provides both a modern web interface and a powerful command-line interface for complete fundi management.
 
+## 🎬 Live Demo
+
+📺 **[Watch the Live Demo on YouTube](https://www.youtube.com/watch?v=0eslx5nI2XQ&feature=youtu.be)**
+
+Experience the full functionality of FundiMatch CLI in action! This demo showcases:
+- User authentication and role-based access
+- Fundi profile management and job creation
+- Database operations and relationships
+- Professional CLI interface design
+- Complete workflow demonstration
+
 ## 🎯 Problem Statement
 
 In Kenya and many other regions, finding reliable fundis (contractors such as electricians, plumbers, and masons) is a significant challenge. Clients often rely on word of mouth, which is unreliable, while fundis lack a structured way to showcase their skills and get consistent work. This results in inefficiency, wasted time, and poor trust between clients and service providers.
@@ -173,9 +184,27 @@ In Kenya and many other regions, finding reliable fundis (contractors such as el
    python lib/main.py
    ```
 
+### 🎬 Quick Demo
+
+📺 **[Watch Setup & Demo](https://www.youtube.com/watch?v=0eslx5nI2XQ&feature=youtu.be)**
+
+For a quick overview of the setup process and full functionality demonstration, check out the live demo video above!
+
 ---
 
 ## 🎮 Usage Guide
+
+### 🎬 Demo & Walkthrough
+
+📺 **[Watch the Complete Demo](https://www.youtube.com/watch?v=0eslx5nI2XQ&feature=youtu.be)**
+
+The demo covers:
+- **CLI Application Walkthrough**: Complete demonstration of the command-line interface
+- **User Registration & Authentication**: Creating accounts for different user types
+- **Fundi Profile Management**: Setting up professional profiles with skills and rates
+- **Job Creation & Assignment**: Full workflow from job posting to assignment
+- **Database Operations**: Real-time database interactions and relationships
+- **Role-Based Access**: Different experiences for Admin, Client, and Fundi users
 
 ### Web Application
 

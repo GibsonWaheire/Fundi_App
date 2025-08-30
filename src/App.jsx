@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
 import Dashboard from './components/Dashboard'
 import FundiProfile from './components/FundiProfile'
 import FundiPage from './components/FundiPage'
+import PublicFindFundis from './components/PublicFindFundis'
 import About from './components/About'
 import Contact from './components/Contact'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -17,7 +18,6 @@ import Messages from './components/dashboard/Messages'
 import Payments from './components/dashboard/Payments'
 import Reviews from './components/dashboard/Reviews'
 import Settings from './components/dashboard/Settings'
-import FindFundis from './components/dashboard/FindFundis'
 import Availability from './components/dashboard/Availability'
 import Profile from './components/dashboard/Profile'
 import Users from './components/dashboard/Users'
@@ -40,7 +40,7 @@ function AppContent() {
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />
-          <Route path="find-fundis" element={<FindFundis />} />
+          <Route path="find-fundis" element={<Navigate to="/find-fundis" replace />} />
           <Route path="jobs" element={<MyJobs />} />
           <Route path="bookings" element={<MyBookings />} />
           <Route path="messages" element={<Messages />} />
@@ -55,6 +55,7 @@ function AppContent() {
         </Route>
         <Route path="/fundi-profile" element={<FundiProfile />} />
         <Route path="/fundi" element={<FundiPage />} />
+        <Route path="/find-fundis" element={<PublicFindFundis />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>

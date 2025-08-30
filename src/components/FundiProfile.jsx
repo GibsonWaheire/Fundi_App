@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import MpesaPaymentModal from './MpesaPaymentModal'
 
@@ -9,83 +9,127 @@ const FundiProfile = () => {
   const [selectedLocation, setSelectedLocation] = useState('all')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [hasPaid, setHasPaid] = useState(false)
+  const [fundis, setFundis] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const fundis = [
-    {
-      id: 1,
-      name: "John Kamau",
-      profession: "Plumber",
-      rating: 4.8,
-      experience: "8 years",
-      location: "Nairobi, Westlands",
-      hourlyRate: "KSh 800",
-      image: "/assets/fundi 1.webp",
-      skills: ["Pipe Installation", "Leak Repair", "Water Heater", "Drainage", "Bathroom Fittings"],
-      reviews: [
-        { user: "Mary N.", rating: 5, comment: "Excellent work, very professional and completed the job on time.", date: "2 days ago" },
+  // Fetch fundis data from API
+  useEffect(() => {
+    const fetchFundis = async () => {
+      try {
+        // Fetch fundis, bookings, and reviews data
+        const [fundisResponse, bookingsResponse, reviewsResponse] = await Promise.all([
+          fetch('http://localhost:3001/fundis'),
+          fetch('http://localhost:3001/bookings'),
+          fetch('http://localhost:3001/reviews')
+        ])
+        
+        const fundisData = await fundisResponse.json()
+        const bookingsData = await bookingsResponse.json()
+        const reviewsData = await reviewsResponse.json()
+        
+        // Transform the data to include pricing options and additional fields
+        const transformedFundis = fundisData.map(fundi => {
+          // Calculate completed projects for this fundi
+          const fundiBookings = bookingsData.filter(booking => booking.fundi_id === fundi.id)
+          const completedProjects = fundiBookings.filter(booking => booking.status === 'completed').length
+          const totalProjects = fundiBookings.length
+          
+          // Get reviews for this fundi
+          const fundiReviews = reviewsData.filter(review => review.fundi_id === fundi.id)
+          
+          // Convert hourly rate to daily rate (8 hours work day)
+          const dailyRate = Math.round(fundi.hourly_rate * 8)
+          const contractRate = Math.round(dailyRate * 3) // 3 days for small contract
+          
+          return {
+            id: fundi.id,
+            name: fundi.username,
+            profession: fundi.specialization,
+            rating: fundi.rating || 4.5,
+            experience: fundi.experience,
+            location: fundi.location,
+            // Real pricing structure based on hourly rate
+            dailyRate: `KSh ${dailyRate}`,
+            contractRate: `KSh ${contractRate}`,
+            pricingType: dailyRate <= 2000 ? 'daily' : 'contract', // Lower rates prefer daily
+            image: `/assets/fundi ${(fundi.id % 7) + 1}.${fundi.id % 2 === 0 ? 'webp' : 'jpeg'}`,
+            skills: getSkillsBySpecialization(fundi.specialization),
+            reviews: fundiReviews.length > 0 ? fundiReviews.map(review => ({
+              user: `Client ${review.client_id}`,
+              rating: review.rating,
+              comment: review.comment,
+              date: new Date(review.created_at).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+              })
+            })) : generateDefaultReviews(fundi.specialization),
+            completedProjects: completedProjects,
+            totalProjects: totalProjects,
+            responseTime: `Within ${Math.floor(Math.random() * 4) + 1} hours`,
+            verified: true,
+            bio: fundi.bio,
+            phone: fundi.phone,
+            email: fundi.email,
+            isAvailable: fundi.is_available,
+            hourlyRate: fundi.hourly_rate // Keep original for reference
+          }
+        })
+        
+        setFundis(transformedFundis)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching fundis:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchFundis()
+  }, [])
+
+  // Helper function to get skills based on specialization
+  const getSkillsBySpecialization = (specialization) => {
+    const skillsMap = {
+      'Plumbing': ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drainage', 'Bathroom Fittings', 'Kitchen Plumbing'],
+      'Electrical': ['Wiring', 'Installation', 'Repair', 'Maintenance', 'Solar Systems', 'Lighting'],
+      'Carpentry': ['Furniture Making', 'Cabinet Installation', 'Wood Repair', 'Custom Designs', 'Door Installation'],
+      'Painting': ['Interior Painting', 'Exterior Painting', 'Wallpaper', 'Color Consultation', 'Surface Preparation'],
+      'Construction': ['Brick Laying', 'Tiling', 'Plastering', 'Renovation', 'Foundation Work', 'Roofing']
+    }
+    return skillsMap[specialization] || ['General Repairs', 'Installation', 'Maintenance']
+  }
+
+  // Helper function to generate default reviews when no real reviews exist
+  const generateDefaultReviews = (specialization) => {
+    const reviewTemplates = {
+      'Plumbing': [
+        { user: "Mary N.", rating: 5, comment: "Excellent plumbing work, very professional and completed the job on time.", date: "2 days ago" },
         { user: "David K.", rating: 4, comment: "Good quality work, fixed our plumbing issues efficiently.", date: "1 week ago" }
       ],
-      completedProjects: 127,
-      responseTime: "Within 2 hours",
-      verified: true
-    },
-    {
-      id: 2,
-      name: "Peter Mwangi",
-      profession: "Electrician",
-      rating: 4.6,
-      experience: "12 years",
-      location: "Nairobi, Karen",
-      hourlyRate: "KSh 1000",
-      image: "/assets/fundi 2.jpeg",
-      skills: ["Wiring", "Installation", "Repair", "Maintenance", "Solar Systems"],
-      reviews: [
+      'Electrical': [
         { user: "Sarah W.", rating: 5, comment: "Very skilled electrician, installed our solar system perfectly.", date: "3 days ago" },
         { user: "James M.", rating: 4, comment: "Professional and reliable, highly recommended.", date: "2 weeks ago" }
       ],
-      completedProjects: 89,
-      responseTime: "Within 1 hour",
-      verified: true
-    },
-    {
-      id: 3,
-      name: "Amina Hassan",
-      profession: "Mason",
-      rating: 4.9,
-      experience: "15 years",
-      location: "Mombasa, Nyali",
-      hourlyRate: "KSh 900",
-      image: "/assets/fundi 3.jpeg",
-      skills: ["Brick Laying", "Tiling", "Plastering", "Construction", "Renovation"],
-      reviews: [
-        { user: "Fatima A.", rating: 5, comment: "Outstanding masonry work, transformed our home completely.", date: "1 week ago" },
-        { user: "Omar K.", rating: 5, comment: "Highly recommended, excellent craftsmanship and attention to detail.", date: "3 weeks ago" }
-      ],
-      completedProjects: 156,
-      responseTime: "Within 3 hours",
-      verified: true
-    },
-    {
-      id: 4,
-      name: "David Ochieng",
-      profession: "Carpenter",
-      rating: 4.7,
-      experience: "10 years",
-      location: "Nairobi, Kilimani",
-      hourlyRate: "KSh 750",
-      image: "/assets/fundi 4.jpeg",
-      skills: ["Furniture Making", "Cabinet Installation", "Wood Repair", "Custom Designs"],
-      reviews: [
+      'Carpentry': [
         { user: "Grace L.", rating: 5, comment: "Amazing carpenter, created beautiful custom furniture for us.", date: "4 days ago" },
         { user: "Michael O.", rating: 4, comment: "Great work quality and very professional.", date: "1 week ago" }
       ],
-      completedProjects: 94,
-      responseTime: "Within 4 hours",
-      verified: true
+      'Painting': [
+        { user: "Alice P.", rating: 5, comment: "Outstanding painting work, transformed our home completely.", date: "1 week ago" },
+        { user: "Bob R.", rating: 4, comment: "Excellent color choices and clean work.", date: "2 weeks ago" }
+      ],
+      'Construction': [
+        { user: "Fatima A.", rating: 5, comment: "Outstanding masonry work, transformed our home completely.", date: "1 week ago" },
+        { user: "Omar K.", rating: 5, comment: "Highly recommended, excellent craftsmanship and attention to detail.", date: "3 weeks ago" }
+      ]
     }
-  ]
+    return reviewTemplates[specialization] || [
+      { user: "John D.", rating: 4, comment: "Good work, professional service.", date: "1 week ago" },
+      { user: "Jane S.", rating: 5, comment: "Excellent service, highly recommended.", date: "2 weeks ago" }
+    ]
+  }
 
-  const professions = ['all', 'plumber', 'electrician', 'mason', 'carpenter', 'painter']
+  const professions = ['all', 'plumbing', 'electrical', 'carpentry', 'painting', 'construction']
   const locations = ['all', 'nairobi', 'mombasa', 'kisumu', 'nakuru']
 
   const filteredFundis = fundis.filter(fundi => {
@@ -152,8 +196,36 @@ const FundiProfile = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading fundis...</p>
+          </div>
+        )}
+
+        {/* No Fundis Found */}
+        {!loading && fundis.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No fundis found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your search criteria or check back later</p>
+            <button
+              onClick={() => {
+                setSearchTerm('')
+                setSelectedProfession('all')
+                setSelectedLocation('all')
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
         {/* Fundi Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {!loading && fundis.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Fundi List */}
           <div className="lg:col-span-1">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Available Fundis ({filteredFundis.length})</h2>
@@ -193,11 +265,11 @@ const FundiProfile = () => {
                           ))}
                         </div>
                         <span className="text-sm text-gray-600 ml-2">{fundi.rating}</span>
-                        <span className="text-sm text-gray-500 ml-2">({fundi.completedProjects} projects)</span>
+                        <span className="text-sm text-gray-500 ml-2">({fundi.completedProjects} completed)</span>
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                         <span>📍 {fundi.location}</span>
-                        <span>💰 {fundi.hourlyRate}/hr</span>
+                        <span>💰 {fundi.pricingType === 'daily' ? fundi.dailyRate + '/day' : fundi.contractRate + '/contract'}</span>
                       </div>
                     </div>
                   </div>
@@ -243,9 +315,22 @@ const FundiProfile = () => {
                         <span className="text-gray-600">{filteredFundis[selectedFundi].location}</span>
                       </div>
                       <div className="mb-6">
-                        <span className="text-2xl font-bold text-blue-600">
-                          {filteredFundis[selectedFundi].hourlyRate}/hr
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-2xl font-bold text-blue-600">
+                            {filteredFundis[selectedFundi].pricingType === 'daily' 
+                              ? filteredFundis[selectedFundi].dailyRate + '/day'
+                              : filteredFundis[selectedFundi].contractRate + '/contract'
+                            }
+                          </span>
+                          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            {filteredFundis[selectedFundi].pricingType === 'daily' ? 'Daily Rate' : 'Per Contract'}
+                          </span>
+                        </div>
+                        {filteredFundis[selectedFundi].pricingType === 'daily' && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            Also available: {filteredFundis[selectedFundi].contractRate} per contract
+                          </p>
+                        )}
                       </div>
                       <div className="flex space-x-4">
                         {hasPaid ? (
@@ -276,8 +361,8 @@ const FundiProfile = () => {
                       <div className="text-sm text-blue-600">Completed Projects</div>
                     </div>
                     <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                      <div className="text-2xl font-bold text-green-600">{filteredFundis[selectedFundi].responseTime}</div>
-                      <div className="text-sm text-green-600">Response Time</div>
+                      <div className="text-2xl font-bold text-green-600">{filteredFundis[selectedFundi].totalProjects}</div>
+                      <div className="text-sm text-green-600">Total Projects</div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
                       <div className="text-2xl font-bold text-purple-600">{filteredFundis[selectedFundi].experience}</div>
@@ -352,6 +437,7 @@ const FundiProfile = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* M-Pesa Payment Modal */}

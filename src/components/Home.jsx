@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import PhoneLoginModal from './PhoneLoginModal'
-import MpesaPaymentModal from './MpesaPaymentModal'
+import RegisterModal from './RegisterModal'
 
 const Home = () => {
   const [currentImage, setCurrentImage] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
-  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
-  const [userData, setUserData] = useState(null)
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   
   const heroImages = [
     'https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
@@ -26,20 +23,15 @@ const Home = () => {
   }, [heroImages.length])
 
   const handleFindFundis = () => {
-    setIsPhoneModalOpen(true)
+    window.location.href = '/fundi-profile'
   }
 
-  const handlePhoneSuccess = (user) => {
-    setUserData(user)
-    setIsPhoneModalOpen(false)
-    setIsPaymentModalOpen(true)
+  const handlePostJob = () => {
+    // Open the register modal
+    setIsRegisterOpen(true)
   }
 
-  const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false)
-    // Redirect to dashboard find fundis page
-    window.location.href = '/dashboard/find-fundis'
-  }
+
 
   const services = [
     {
@@ -155,8 +147,8 @@ const Home = () => {
             />
           ))}
           {/* Enhanced Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         </div>
 
         {/* Floating Elements */}
@@ -207,7 +199,7 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
             <button
-              onClick={handleFindFundis}
+              onClick={handlePostJob}
               className="group px-10 py-5 border-3 border-white text-white text-xl font-bold rounded-2xl hover:bg-white hover:text-gray-900 transition-all duration-300 backdrop-blur-sm hover:backdrop-blur-none"
             >
               <span className="flex items-center justify-center">
@@ -400,7 +392,7 @@ const Home = () => {
               Find Fundis Now
             </button>
             <button
-              onClick={handleFindFundis}
+              onClick={handlePostJob}
               className="px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-xl hover:bg-white hover:text-blue-600 transition-all duration-300"
             >
               Post Your Job
@@ -455,21 +447,13 @@ const Home = () => {
         </div>
       </footer>
 
-      {/* Modals */}
-      <PhoneLoginModal
-        isOpen={isPhoneModalOpen}
-        onClose={() => setIsPhoneModalOpen(false)}
-        onSuccess={handlePhoneSuccess}
-        showPayment={true}
+      {/* Register Modal */}
+      <RegisterModal 
+        isOpen={isRegisterOpen} 
+        onClose={() => setIsRegisterOpen(false)} 
+        allowFundis={false}
       />
 
-      <MpesaPaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        onSuccess={handlePaymentSuccess}
-        fundi={null}
-        phoneNumber={userData?.phone}
-      />
     </div>
   )
 }

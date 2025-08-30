@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
-import RegisterModal from './RegisterModal'
+import PhoneLoginModal from './PhoneLoginModal'
+import MpesaPaymentModal from './MpesaPaymentModal'
 
 export default function PublicFindFundis() {
   const { user } = useAuth()
@@ -11,9 +12,11 @@ export default function PublicFindFundis() {
   const [selectedService, setSelectedService] = useState('all')
   const [selectedLocation, setSelectedLocation] = useState('all')
   const [showContactModal, setShowContactModal] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [fundis, setFundis] = useState([])
   const [loading, setLoading] = useState(true)
+  const [userData, setUserData] = useState(null)
 
   // Fetch fundis data
   useEffect(() => {
@@ -61,7 +64,7 @@ export default function PublicFindFundis() {
     hourlyRate: `KSh ${fundi.hourly_rate}`,
     experience: fundi.experience,
     verified: fundi.is_active,
-    available: fundi.is_available,
+    available: fundi.is_available !== false, // Default to true if not explicitly false
     avatar: getAvatarBySpecialization(fundi.specialization),
     specialties: getSpecialtiesBySpecialization(fundi.specialization),
     phone: fundi.phone,
@@ -100,9 +103,20 @@ export default function PublicFindFundis() {
       // If user is logged in, show contact directly
       setShowContactModal(true)
     } else {
-      // If not logged in, open registration modal
-      setShowRegisterModal(true)
+      // If not logged in, require payment
+      setIsPhoneModalOpen(true)
     }
+  }
+
+  const handlePhoneSuccess = (user) => {
+    setUserData(user)
+    setIsPhoneModalOpen(false)
+    setIsPaymentModalOpen(true)
+  }
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false)
+    setShowContactModal(true)
   }
 
 
@@ -173,7 +187,7 @@ export default function PublicFindFundis() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             {user 
               ? "Browse verified professionals in your area. As a registered user, you have free access to all contact details."
-              : "Browse verified professionals in your area. Sign up to view contact details and get full access to their profiles."
+              : "Browse verified professionals in your area. Pay once to unlock contact details and get full access to their profiles."
             }
           </p>
         </div>
@@ -298,7 +312,7 @@ export default function PublicFindFundis() {
                     disabled={!fundi.available}
                     className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {user ? 'View Contact' : 'Sign Up to View Contact'}
+                    {user ? 'View Contact' : 'View Contact (KSh 50)'}
                   </button>
                 </div>
               </div>
@@ -333,7 +347,7 @@ export default function PublicFindFundis() {
           <p className="text-xl text-blue-100 mb-6">
             {user 
               ? "Access your dashboard to manage bookings, payments, and more"
-              : "Sign up for free to view fundi contact details and manage your projects"
+              : "Sign up for free to access all features and manage your projects"
             }
           </p>
           <Link
@@ -371,7 +385,7 @@ export default function PublicFindFundis() {
                 <p className="text-green-800 text-sm">
                   {user 
                     ? "💡 <strong>Tip:</strong> You can manage all your bookings and payments from your dashboard."
-                    : "💡 <strong>Tip:</strong> Save these contact details! You can now call or email this fundi directly."
+                    : "💡 <strong>Tip:</strong> Save these contact details! You can also sign up for free to access more fundi profiles and manage your projects."
                   }
                 </p>
               </div>
@@ -395,11 +409,20 @@ export default function PublicFindFundis() {
         </div>
       )}
 
-      {/* Register Modal */}
-      <RegisterModal 
-        isOpen={showRegisterModal} 
-        onClose={() => setShowRegisterModal(false)} 
-        allowFundis={false}
+      {/* Modals */}
+      <PhoneLoginModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        onSuccess={handlePhoneSuccess}
+        showPayment={true}
+      />
+
+      <MpesaPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        fundi={selectedFundi}
+        phoneNumber={userData?.phone}
       />
 
     </div>

@@ -194,7 +194,7 @@ export default function ClientDashboard() {
         <div>
           <FundiTable />
         </div>
-      )}
-    </div>
-  )
-}
+              )}
+      </div>
+    )
+  }

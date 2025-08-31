@@ -269,7 +269,7 @@ pipenv run python lib/db/seed.py
 - **CLI Database**: Local SQLite file, no network access required
 - **Web Database**: JSON Server for development only
 - **Production**: Use proper database (PostgreSQL, MySQL) with authentication
-- **Environment Variables**: Keep Firebase config in `.env` file
+- **Environment Variables**: Keep API config in `.env` file
 
 ## ✅ Verification Checklist
 

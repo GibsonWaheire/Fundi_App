@@ -207,29 +207,12 @@ const FundiTable = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Find Skilled Fundis</h1>
             <p className="text-xl text-gray-600">
-              Browse verified professionals. Pay KSh 50 per fundi to unlock their contact details, or view already unlocked fundis for free.
+              Browse verified professionals. Pay KSh 50 per fundi to unlock their contact details.
             </p>
           </div>
         </div>
 
-                {/* Payment Info */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8 border border-blue-200">
-          <div className="flex items-start">
-            <span className="text-2xl mr-4">💡</span>
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-2">How It Works</h3>
-              <p className="text-blue-800 text-sm mb-3">
-                Pay KSh 50 per fundi to unlock their contact details. Each payment gives you access to one fundi's phone number and email.
-              </p>
-              <div className="flex items-center space-x-4 text-xs text-blue-700">
-                <span>💳 Pay per fundi</span>
-                <span>📞 Get contact details</span>
-                <span>🔒 Others remain locked</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        )}
+        
 
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">

@@ -69,7 +69,7 @@ db.json
 *.db
 fundimatch.db
 
-# Firebase configuration files
+# Configuration files
 firebase-config.js
 src/firebase-config.js
 

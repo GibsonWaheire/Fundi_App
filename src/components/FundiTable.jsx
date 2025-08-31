@@ -21,6 +21,7 @@ const FundiTable = () => {
   const [selectedFundi, setSelectedFundi] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [fundiUnlocks, setFundiUnlocks] = useState([])
+  const [unlockedFundis, setUnlockedFundis] = useState(new Set())
 
   // Fetch fundis data and unlock tracking
   useEffect(() => {
@@ -35,6 +36,11 @@ const FundiTable = () => {
         
         setFundis(fundisData)
         setFundiUnlocks(unlocksData)
+        
+        // Set current user if logged in
+        if (user) {
+          setCurrentUser(user)
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -43,7 +49,7 @@ const FundiTable = () => {
     }
 
     fetchData()
-  }, [])
+  }, [user])
 
   const services = [
     { id: 'all', name: 'All Services', icon: '🔧' },
@@ -113,10 +119,10 @@ const FundiTable = () => {
     setSelectedFundi(fundi)
     
     if (currentUser && canViewContact(fundi.id)) {
-      // User has already paid for this fundi
+      // User has already paid for this fundi - show contact details directly
       setShowContactModal(true)
     } else {
-      // User needs to pay
+      // User needs to pay - start payment flow
       if (!currentUser) {
         // No user logged in, start with phone login
         setIsPhoneModalOpen(true)
@@ -124,6 +130,14 @@ const FundiTable = () => {
         // User logged in but hasn't paid, go directly to payment
         setIsPaymentModalOpen(true)
       }
+    }
+  }
+
+  const handleContactClick = (fundi) => {
+    // This is for clicking on unlocked contact details
+    if (currentUser && canViewContact(fundi.id)) {
+      setSelectedFundi(fundi)
+      setShowContactModal(true)
     }
   }
 
@@ -141,15 +155,16 @@ const FundiTable = () => {
         // Record the unlock
         await fundiUnlockService.unlockFundi(selectedFundi.id, currentUser.id)
         
-        // Refresh unlock data
+        // Refresh unlock data to update the UI
         const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
         setFundiUnlocks(updatedUnlocks)
         
         // Show success message
         alert(`🎉 Success! ${selectedFundi.name} is now unlocked!`)
+        
+        // Immediately show the contact modal with unlocked details
+        setShowContactModal(true)
       }
-      
-      setShowContactModal(true)
     } catch (error) {
       console.error('Error recording unlock:', error)
       alert('Payment successful but there was an error recording the unlock. Please try again.')
@@ -419,27 +434,37 @@ const FundiTable = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleViewContact(fundi)}
-                        disabled={!fundi.available}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                          getLockStatus(fundi.id) === 'unlocked'
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {getLockStatus(fundi.id) === 'unlocked' ? (
-                          <span className="flex items-center">
-                            <span className="mr-1">📞</span>
-                            Contact
-                          </span>
-                        ) : (
+                      {getLockStatus(fundi.id) === 'unlocked' ? (
+                        <div className="space-y-2">
+                          <div 
+                            className="text-sm text-gray-600 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                            onClick={() => handleContactClick(fundi)}
+                          >
+                            <div className="flex items-center justify-center space-x-2">
+                              <span>📞</span>
+                              <span className="font-semibold">{fundi.phone}</span>
+                            </div>
+                            <div className="flex items-center justify-center space-x-2 mt-1">
+                              <span>📧</span>
+                              <span className="font-semibold">{fundi.email}</span>
+                            </div>
+                            <div className="text-xs text-blue-600 mt-1 text-center">
+                              Click to view full profile
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleViewContact(fundi)}
+                          disabled={!fundi.available}
+                          className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                           <span className="flex items-center">
                             <span className="mr-1">💳</span>
                             Pay KSh 50
                           </span>
-                        )}
-                      </button>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

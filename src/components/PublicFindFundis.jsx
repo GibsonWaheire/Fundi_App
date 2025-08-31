@@ -37,6 +37,11 @@ const PublicFindFundis = () => {
         
         setFundis(fundisData)
         setFundiUnlocks(unlocksData)
+        
+        // Set current user if logged in
+        if (user) {
+          setCurrentUser(user)
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load fundis. Please try again.')
@@ -46,7 +51,7 @@ const PublicFindFundis = () => {
     }
 
     fetchData()
-  }, [])
+  }, [user])
 
   const services = [
     { id: 'all', name: 'All Services', icon: '🔧' },
@@ -116,10 +121,10 @@ const PublicFindFundis = () => {
     setSelectedFundi(fundi)
     
     if (currentUser && canViewContact(fundi.id)) {
-      // User has already paid for this fundi
+      // User has already paid for this fundi - show contact details directly
       setShowContactModal(true)
     } else {
-      // User needs to pay
+      // User needs to pay - start payment flow
       if (!currentUser) {
         // No user logged in, start with phone login
         setIsPhoneModalOpen(true)
@@ -144,18 +149,27 @@ const PublicFindFundis = () => {
         // Record the unlock
         await fundiUnlockService.unlockFundi(selectedFundi.id, currentUser.id)
         
-        // Refresh unlock data
+        // Refresh unlock data to update the UI
         const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
         setFundiUnlocks(updatedUnlocks)
         
         // Show success message
         alert(`🎉 Success! ${selectedFundi.name} is now unlocked!`)
+        
+        // Immediately show the contact modal with unlocked details
+        setShowContactModal(true)
       }
-      
-      setShowContactModal(true)
     } catch (error) {
       console.error('Error recording unlock:', error)
       alert('Payment successful but there was an error recording the unlock. Please try again.')
+    }
+  }
+
+  const handleContactClick = (fundi) => {
+    // This is for clicking on unlocked contact details
+    if (currentUser && canViewContact(fundi.id)) {
+      setSelectedFundi(fundi)
+      setShowContactModal(true)
     }
   }
 
@@ -325,16 +339,16 @@ const PublicFindFundis = () => {
               <p className="text-gray-600">Ready to help with your project</p>
               <div className="mt-2 flex items-center space-x-4 text-sm">
                 <span className="flex items-center">
-                  <span className="text-blue-600 mr-1">🔓</span>
-                  <span className="text-gray-600">
-                    {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
+                                      <span className="text-blue-600 mr-1">🔓</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
+                    </span>
                   </span>
-                </span>
-                <span className="flex items-center">
-                  <span className="text-gray-600 mr-1">🔒</span>
-                  <span className="text-gray-600">
-                    {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
-                  </span>
+                  <span className="flex items-center">
+                    <span className="text-gray-600 mr-1">🔒</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
+                    </span>
                 </span>
               </div>
             </div>
@@ -398,27 +412,45 @@ const PublicFindFundis = () => {
                 </div>
                 
                 <div className="mt-6">
-                  <button
-                    onClick={() => handleViewContact(fundi)}
-                    disabled={!fundi.available}
-                    className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                      getLockStatus(fundi.id) === 'unlocked'
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                        : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
-                    } disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105`}
-                  >
-                    {getLockStatus(fundi.id) === 'unlocked' ? (
-                      <span className="flex items-center justify-center">
-                        <span className="mr-2">📞</span>
-                        Contact Now
-                      </span>
-                    ) : (
+                  {getLockStatus(fundi.id) === 'unlocked' ? (
+                    <div className="space-y-3">
+                      <div 
+                        className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => handleContactClick(fundi)}
+                      >
+                        <div className="text-sm text-gray-700 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center">
+                              <span className="mr-2">📞</span>
+                              <span>Phone:</span>
+                            </span>
+                            <span className="font-semibold">{fundi.phone}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center">
+                              <span className="mr-2">📧</span>
+                              <span>Email:</span>
+                            </span>
+                            <span className="font-semibold">{fundi.email}</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-blue-600 mt-2 text-center">
+                          Click to view full profile
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleViewContact(fundi)}
+                      disabled={!fundi.available}
+                      className="w-full px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <span className="flex items-center justify-center">
                         <span className="mr-2">💳</span>
                         Pay KSh 50
                       </span>
-                    )}
-                  </button>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

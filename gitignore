@@ -129,3 +129,7 @@ venv.bak/
 
 # OS
 Thumbs.db
+
+# Presentation files
+CLI_PRESENTATION.md
+CLI_PRESENTATION_OUTLINE.md

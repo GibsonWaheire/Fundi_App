@@ -1,14 +1,16 @@
 // Authentication service for FundiMatch
 // This service handles user authentication against the db.json file
 
+import { buildApiUrl } from '../config/api.js';
+
 export const authService = {
   // Validate user credentials across all user types (admin, client, fundi)
   async validateUser(email, password) {
     try {
       // Fetch all user types
       const [usersResponse, fundisResponse] = await Promise.all([
-        fetch('http://localhost:3002/users'),
-        fetch('http://localhost:3002/fundis')
+        fetch(buildApiUrl('users')),
+        fetch(buildApiUrl('fundis'))
       ])
       
       const users = await usersResponse.json()
@@ -40,8 +42,8 @@ export const authService = {
     try {
       // Fetch all user types
       const [usersResponse, fundisResponse] = await Promise.all([
-        fetch('http://localhost:3002/users'),
-        fetch('http://localhost:3002/fundis')
+        fetch(buildApiUrl('users')),
+        fetch(buildApiUrl('fundis'))
       ])
       
       const users = await usersResponse.json()
@@ -60,7 +62,7 @@ export const authService = {
   // Get all fundis (for client dashboard)
   async getAllFundis() {
     try {
-      const response = await fetch('http://localhost:3002/fundis')
+      const response = await fetch(buildApiUrl('fundis'))
       return await response.json()
     } catch (error) {
       console.error('Error fetching fundis:', error)
@@ -71,7 +73,7 @@ export const authService = {
   // Get available fundis only
   async getAvailableFundis() {
     try {
-      const response = await fetch('http://localhost:3002/fundis?is_available=true')
+      const response = await fetch(`${buildApiUrl('fundis')}?is_available=true`)
       return await response.json()
     } catch (error) {
       console.error('Error fetching available fundis:', error)
@@ -82,7 +84,7 @@ export const authService = {
   // Get fundis by specialization
   async getFundisBySpecialization(specialization) {
     try {
-      const response = await fetch(`http://localhost:3002/fundis?specialization=${specialization}`)
+      const response = await fetch(`${buildApiUrl('fundis')}?specialization=${specialization}`)
       return await response.json()
     } catch (error) {
       console.error('Error fetching fundis by specialization:', error)
@@ -93,7 +95,7 @@ export const authService = {
   // Register new user (client)
   async registerUser(userData) {
     try {
-      const response = await fetch('http://localhost:3002/users', {
+      const response = await fetch(buildApiUrl('users'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +125,7 @@ export const authService = {
   // Register new fundi
   async registerFundi(fundiData) {
     try {
-      const response = await fetch('http://localhost:3002/fundis', {
+      const response = await fetch(buildApiUrl('fundis'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +158,7 @@ export const authService = {
   // Get all users (for admin dashboard)
   async getAllUsers() {
     try {
-      const response = await fetch('http://localhost:3002/users')
+      const response = await fetch(buildApiUrl('users'))
       return await response.json()
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -167,7 +169,7 @@ export const authService = {
   // Get all fundis (for admin dashboard)
   async getAllFundisForAdmin() {
     try {
-      const response = await fetch('http://localhost:3002/fundis')
+      const response = await fetch(buildApiUrl('fundis'))
       return await response.json()
     } catch (error) {
       console.error('Error fetching fundis:', error)
@@ -178,7 +180,7 @@ export const authService = {
   // Create booking
   async createBooking(bookingData) {
     try {
-      const response = await fetch('http://localhost:3002/bookings', {
+      const response = await fetch(buildApiUrl('bookings'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,7 +208,7 @@ export const authService = {
   // Get user's bookings
   async getUserBookings(userId) {
     try {
-      const response = await fetch(`http://localhost:3002/bookings?client_id=${userId}`)
+      const response = await fetch(`${buildApiUrl('bookings')}?client_id=${userId}`)
       return await response.json()
     } catch (error) {
       console.error('Error fetching user bookings:', error)
@@ -217,7 +219,7 @@ export const authService = {
   // Get fundi's bookings
   async getFundiBookings(fundiId) {
     try {
-      const response = await fetch(`http://localhost:3002/bookings?fundi_id=${fundiId}`)
+      const response = await fetch(`${buildApiUrl('bookings')}?fundi_id=${fundiId}`)
       return await response.json()
     } catch (error) {
       console.error('Error fetching fundi bookings:', error)

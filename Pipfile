@@ -5,6 +5,12 @@ name = "pypi"
 
 [packages]
 sqlalchemy = "*"
+flask = "*"
+flask-sqlalchemy = "*"
+flask-cors = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.11"
+
+[dev-packages]

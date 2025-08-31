@@ -1,0 +1,32 @@
+# Render Deployment Configuration for FundiMatch Flask Backend
+# ===========================================================
+
+services:
+  # Flask Backend API
+  - type: web
+    name: fundimatch-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn flask_backend_template:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        value: postgresql://postgres:password@localhost:5432/fundimatch
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  # PostgreSQL Database (if using Render's managed database)
+  - type: pserv
+    name: fundimatch-db
+    env: python
+    plan: free
+    disk:
+      name: fundimatch-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1

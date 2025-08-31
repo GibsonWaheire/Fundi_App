@@ -143,24 +143,35 @@ const PublicFindFundis = () => {
 
   const handlePaymentSuccess = async () => {
     try {
+      console.log('🔄 Payment success - starting unlock process...')
+      console.log('Current user:', currentUser)
+      console.log('Selected fundi:', selectedFundi)
+      
       setIsPaymentModalOpen(false)
       
       if (currentUser && selectedFundi) {
+        console.log('📝 Recording unlock in database...')
         // Record the unlock
         await fundiUnlockService.unlockFundi(selectedFundi.id, currentUser.id)
         
+        console.log('🔄 Refreshing unlock data...')
         // Refresh unlock data to update the UI
         const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
         setFundiUnlocks(updatedUnlocks)
+        
+        console.log('✅ Unlock recorded successfully!')
+        console.log('📱 Opening contact modal for:', selectedFundi.name)
         
         // Show success message
         alert(`🎉 Success! ${selectedFundi.name} is now unlocked!`)
         
         // Immediately show the contact modal with unlocked details
         setShowContactModal(true)
+      } else {
+        console.error('❌ Missing user or selected fundi:', { currentUser, selectedFundi })
       }
     } catch (error) {
-      console.error('Error recording unlock:', error)
+      console.error('❌ Error recording unlock:', error)
       alert('Payment successful but there was an error recording the unlock. Please try again.')
     }
   }
@@ -542,6 +553,7 @@ const PublicFindFundis = () => {
                   </p>
                   <div className="text-green-700 text-xs text-center mt-2 space-y-1">
                     <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
+                    <p>🎯 <strong>This specific fundi ({selectedFundi.name}) is now unlocked for you!</strong></p>
                   </div>
                 </div>
 

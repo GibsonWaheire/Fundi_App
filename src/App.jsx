@@ -42,7 +42,7 @@ function AppContent() {
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />
-          <Route path="find-fundis" element={<Navigate to="/find-fundis" replace />} />
+          <Route path="find-fundis" element={<FundiTable />} />
           <Route path="jobs" element={<MyJobs />} />
           <Route path="bookings" element={<MyBookings />} />
           <Route path="messages" element={<Messages />} />

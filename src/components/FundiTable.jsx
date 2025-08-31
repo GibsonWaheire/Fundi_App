@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
+import { fundiUnlockService } from '../services/fundiUnlockService'
 import PhoneLoginModal from './PhoneLoginModal'
 import MpesaPaymentModal from './MpesaPaymentModal'
 
@@ -18,22 +19,33 @@ const FundiTable = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [selectedFundi, setSelectedFundi] = useState(null)
   const [userData, setUserData] = useState(null)
-  const [paidFundiIds, setPaidFundiIds] = useState(new Set()) // Track paid fundis
+  const [fundiUnlocks, setFundiUnlocks] = useState([])
 
-  // Fetch fundis data
+  // Fetch fundis data and unlock tracking
   useEffect(() => {
-    const fetchFundis = async () => {
+    const fetchData = async () => {
       try {
-        const fundisData = await authService.getAllFundis()
+        setLoading(true)
+        console.log('Fetching fundis and unlock data...')
+        
+        const [fundisData, unlocksData] = await Promise.all([
+          authService.getAllFundis(),
+          fundiUnlockService.getAllUnlocks()
+        ])
+        
+        console.log('Fundis fetched successfully:', fundisData.length)
+        console.log('Unlock data fetched successfully:', unlocksData.length)
+        
         setFundis(fundisData)
-        setLoading(false)
+        setFundiUnlocks(unlocksData)
       } catch (error) {
-        console.error('Error fetching fundis:', error)
+        console.error('Error fetching data:', error)
+      } finally {
         setLoading(false)
       }
     }
 
-    fetchFundis()
+    fetchData()
   }, [])
 
   const services = [
@@ -87,14 +99,13 @@ const FundiTable = () => {
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
     
-    if (user) {
-      // If user is logged in, show contact directly
-      setShowContactModal(true)
-    } else if (paidFundiIds.has(fundi.id)) {
-      // If this fundi was already paid for, show contact
+    // Check if fundi is already unlocked by anyone
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
+    if (unlockInfo && unlockInfo.unlock_count > 0) {
+      // Fundi is already unlocked, show contact for free (for everyone)
       setShowContactModal(true)
     } else {
-      // If not logged in and not paid for this fundi, require payment
+      // Fundi not unlocked, require payment (for everyone, including logged-in users)
       setIsPhoneModalOpen(true)
     }
   }
@@ -105,10 +116,25 @@ const FundiTable = () => {
     setIsPaymentModalOpen(true)
   }
 
-  const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false)
-    setPaidFundiIds(prev => new Set([...prev, selectedFundi.id])) // Mark this fundi as paid for
-    setShowContactModal(true)
+  const handlePaymentSuccess = async () => {
+    try {
+      setIsPaymentModalOpen(false)
+      
+      // Record the unlock in the database
+      if (userData && selectedFundi) {
+        await fundiUnlockService.unlockFundi(selectedFundi.id, userData.id)
+        
+        // Refresh unlock data
+        const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
+        setFundiUnlocks(updatedUnlocks)
+      }
+      
+      setShowContactModal(true)
+    } catch (error) {
+      console.error('Error recording unlock:', error)
+      // Still show contact modal even if recording fails
+      setShowContactModal(true)
+    }
   }
 
   // Filter and sort fundis
@@ -152,7 +178,14 @@ const FundiTable = () => {
   }
 
   const canViewContact = (fundiId) => {
-    return user || paidFundiIds.has(fundiId)
+    // Check if fundi is already unlocked by anyone (for everyone)
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo && unlockInfo.unlock_count > 0
+  }
+
+  const getUnlockCount = (fundiId) => {
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlock_count : 0
   }
 
   if (loading) {
@@ -174,32 +207,28 @@ const FundiTable = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Find Skilled Fundis</h1>
             <p className="text-xl text-gray-600">
-              {user 
-                ? "Browse verified professionals. As a registered user, you have free access to all contact details."
-                : "Browse verified professionals. Pay KSh 50 per fundi to unlock their contact details."
-              }
+              Browse verified professionals. Pay KSh 50 per fundi to unlock their contact details, or view already unlocked fundis for free.
             </p>
           </div>
         </div>
 
-        {/* Payment Info for Non-Authenticated Users */}
-        {!user && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8 border border-blue-200">
-            <div className="flex items-start">
-              <span className="text-2xl mr-4">💡</span>
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-2">How It Works</h3>
-                <p className="text-blue-800 text-sm mb-3">
-                  Pay KSh 50 per fundi to unlock their contact details. Each payment gives you access to one fundi's phone number and email.
-                </p>
-                <div className="flex items-center space-x-4 text-xs text-blue-700">
-                  <span>💳 Pay per fundi</span>
-                  <span>📞 Get contact details</span>
-                  <span>🔒 Others remain locked</span>
-                </div>
+                {/* Payment Info */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8 border border-blue-200">
+          <div className="flex items-start">
+            <span className="text-2xl mr-4">💡</span>
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-2">How It Works</h3>
+              <p className="text-blue-800 text-sm mb-3">
+                Pay KSh 50 per fundi to unlock their contact details. Each payment gives you access to one fundi's phone number and email.
+              </p>
+              <div className="flex items-center space-x-4 text-xs text-blue-700">
+                <span>💳 Pay per fundi</span>
+                <span>📞 Get contact details</span>
+                <span>🔒 Others remain locked</span>
               </div>
             </div>
           </div>
+        </div>
         )}
 
         {/* Search and Filters */}
@@ -467,11 +496,9 @@ const FundiTable = () => {
                 <p className="text-green-800 text-sm text-center">
                   ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
                 </p>
-                {!user && (
-                  <p className="text-green-700 text-xs text-center mt-2">
-                    💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.
-                  </p>
-                )}
+                <div className="text-green-700 text-xs text-center mt-2 space-y-1">
+                  <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -482,28 +509,16 @@ const FundiTable = () => {
                 >
                   Close
                 </button>
-                {user ? (
-                  <button
-                    onClick={() => {
-                      setShowContactModal(false)
-                      // Navigate to dashboard or booking page
-                    }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-                  >
-                    Book Appointment
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setShowContactModal(false)
-                      alert('Please sign up to access more features!')
-                      window.location.href = '/'
-                    }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
-                  >
-                    Sign Up Free
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setShowContactModal(false)
+                    alert('Please sign up to access more features!')
+                    window.location.href = '/'
+                  }}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+                >
+                  Sign Up Free
+                </button>
               </div>
             </div>
           </div>

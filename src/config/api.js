@@ -4,7 +4,7 @@
 const API_CONFIG = {
   // Development: JSON Server
   development: {
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:3000',
     endpoints: {
       users: '/users',
       fundis: '/fundis',

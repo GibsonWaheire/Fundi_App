@@ -38,7 +38,6 @@ export default function Sidebar() {
       // Default client menu
       return [
         { path: '/dashboard', label: 'Dashboard', icon: '🏠', description: 'Overview & Analytics' },
-        { path: '/dashboard/find-fundis', label: 'Find Fundis', icon: '🔍', description: 'Browse & hire fundis' },
         { path: '/dashboard/jobs', label: 'My Jobs', icon: '📋', description: 'Manage your projects' },
         { path: '/dashboard/bookings', label: 'My Bookings', icon: '📅', description: 'Appointments & schedules' },
         { path: '/dashboard/messages', label: 'Messages', icon: '💬', description: 'Chat with fundis' },

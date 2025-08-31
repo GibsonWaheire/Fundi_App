@@ -14,6 +14,7 @@ const FundiTable = () => {
   const [selectedLocation, setSelectedLocation] = useState('all')
   const [sortBy, setSortBy] = useState('name')
   const [sortOrder, setSortOrder] = useState('asc')
+  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
@@ -149,8 +150,9 @@ const FundiTable = () => {
                            fundi.service.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesService = selectedService === 'all' || fundi.service.toLowerCase() === selectedService
       const matchesLocation = selectedLocation === 'all' || fundi.location.toLowerCase().includes(selectedLocation)
+      const matchesUnlockFilter = !showUnlockedOnly || canViewContact(fundi.id)
       
-      return matchesSearch && matchesService && matchesLocation
+      return matchesSearch && matchesService && matchesLocation && matchesUnlockFilter
     })
     .sort((a, b) => {
       let aValue = a[sortBy]
@@ -230,6 +232,29 @@ const FundiTable = () => {
 
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+          {user && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🔓</span>
+                  <div>
+                    <h3 className="font-semibold text-blue-900">Filter by Access</h3>
+                    <p className="text-blue-800 text-sm">Show only unlocked fundis or view all</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowUnlockedOnly(!showUnlockedOnly)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    showUnlockedOnly
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {showUnlockedOnly ? 'Show All Fundis' : 'Show Unlocked Only'}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <input
@@ -274,6 +299,22 @@ const FundiTable = () => {
                   Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
                 </h3>
                 <p className="text-gray-600">Ready to help with your project</p>
+                {user && (
+                  <div className="mt-2 flex items-center space-x-4 text-sm">
+                    <span className="flex items-center">
+                      <span className="text-blue-600 mr-1">🔓</span>
+                      <span className="text-gray-600">
+                        {filteredAndSortedFundis.filter(f => canViewContact(f.id)).length} unlocked
+                      </span>
+                    </span>
+                    <span className="flex items-center">
+                      <span className="text-gray-600 mr-1">🔒</span>
+                      <span className="text-gray-600">
+                        {filteredAndSortedFundis.filter(f => !canViewContact(f.id)).length} locked
+                      </span>
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
@@ -336,6 +377,7 @@ const FundiTable = () => {
                   </th>
                   <th className="px-6 py-4 text-left">Experience</th>
                   <th className="px-6 py-4 text-left">Status</th>
+                  <th className="px-6 py-4 text-center">Access</th>
                   <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
@@ -383,6 +425,15 @@ const FundiTable = () => {
                           : 'bg-red-100 text-red-800'
                       }`}>
                         {fundi.available ? '🟢 Available' : '🔴 Busy'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        canViewContact(fundi.id)
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {canViewContact(fundi.id) ? '🔓 Unlocked' : '🔒 Locked'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">

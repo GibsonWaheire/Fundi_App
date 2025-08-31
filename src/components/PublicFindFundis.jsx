@@ -22,7 +22,6 @@ export default function PublicFindFundis() {
   const [error, setError] = useState(null)
   const [userData, setUserData] = useState(null)
   const [fundiUnlocks, setFundiUnlocks] = useState([])
-  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
 
   // Fetch fundis data and unlock tracking
   useEffect(() => {
@@ -105,13 +104,18 @@ export default function PublicFindFundis() {
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
     
-    // Check if fundi is already unlocked by anyone
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
-    if (unlockInfo && unlockInfo.unlock_count > 0) {
-      // Fundi is already unlocked, show contact for free (for everyone)
-      setShowContactModal(true)
+    // Check if the current user has unlocked this specific fundi
+    if (user) {
+      const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
+      if (unlockInfo && unlockInfo.unlocked_by.includes(user.id)) {
+        // User has paid for this fundi, show contact
+        setShowContactModal(true)
+      } else {
+        // User hasn't paid for this fundi, require payment
+        setIsPhoneModalOpen(true)
+      }
     } else {
-      // Fundi not unlocked, require payment (for everyone, including logged-in users)
+      // No user logged in, require payment
       setIsPhoneModalOpen(true)
     }
   }
@@ -150,9 +154,7 @@ export default function PublicFindFundis() {
                            fundi.service.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesService = selectedService === 'all' || fundi.service.toLowerCase() === selectedService
       const matchesLocation = selectedLocation === 'all' || fundi.location.toLowerCase().includes(selectedLocation)
-      const matchesUnlockFilter = !showUnlockedOnly || isAlreadyUnlocked(fundi.id)
-      
-      return matchesSearch && matchesService && matchesLocation && matchesUnlockFilter
+      return matchesSearch && matchesService && matchesLocation
     })
     .sort((a, b) => {
       let aValue = a[sortBy]
@@ -180,9 +182,14 @@ export default function PublicFindFundis() {
   }
 
   const canViewContact = (fundiId) => {
-    // Check if fundi is already unlocked by anyone (for everyone)
+    // Check if the current user has unlocked this specific fundi
+    if (!user) return false;
+    
     const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo && unlockInfo.unlock_count > 0
+    if (!unlockInfo) return false;
+    
+    // Check if current user is in the unlocked_by array
+    return unlockInfo.unlocked_by.includes(user.id)
   }
 
   const getUnlockCount = (fundiId) => {
@@ -190,8 +197,10 @@ export default function PublicFindFundis() {
     return unlockInfo ? unlockInfo.unlock_count : 0
   }
 
-  const isAlreadyUnlocked = (fundiId) => {
-    return getUnlockCount(fundiId) > 0
+  const hasUserUnlocked = (fundiId) => {
+    if (!user) return false;
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlocked_by.includes(user.id) : false
   }
 
   // Show loading state
@@ -235,7 +244,7 @@ export default function PublicFindFundis() {
               Find Your Perfect Fundi
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Browse verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details, or view already unlocked fundis for free.
+              Browse verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details.
             </p>
             <div className="flex items-center justify-center space-x-4">
               <Link to="/" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300">
@@ -283,30 +292,7 @@ export default function PublicFindFundis() {
             <p className="text-gray-600">Find the perfect fundi for your project</p>
           </div>
           
-          {/* Unlock Filter Toggle */}
-          {!user && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🔓</span>
-                  <div>
-                    <h3 className="font-semibold text-green-900">Already Unlocked Fundis</h3>
-                    <p className="text-green-800 text-sm">View fundis that have been unlocked by other clients</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowUnlockedOnly(!showUnlockedOnly)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    showUnlockedOnly
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {showUnlockedOnly ? 'Show All Fundis' : 'Show Unlocked Only'}
-                </button>
-              </div>
-            </div>
-          )}
+
           
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-2">
@@ -430,13 +416,6 @@ export default function PublicFindFundis() {
                 {/* Action Button */}
                 <div className="mt-4 lg:mt-0 lg:ml-6 flex-shrink-0">
                   <div className="text-center">
-                    {isAlreadyUnlocked(fundi.id) && !user && (
-                      <div className="mb-2 p-2 bg-green-100 rounded-lg">
-                        <div className="text-xs text-green-800 font-medium">
-                          🔓 Unlocked by {getUnlockCount(fundi.id)} {getUnlockCount(fundi.id) === 1 ? 'client' : 'clients'}
-                        </div>
-                      </div>
-                    )}
                       <button
                         onClick={() => handleViewContact(fundi)}
                         disabled={!fundi.available}
@@ -559,16 +538,9 @@ export default function PublicFindFundis() {
                 <p className="text-green-800 text-sm text-center">
                   ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
                 </p>
-                {!user && (
-                  <div className="text-green-700 text-xs text-center mt-2 space-y-1">
-                    {isAlreadyUnlocked(selectedFundi.id) ? (
-                      <p>🔓 This fundi was unlocked by {getUnlockCount(selectedFundi.id)} {getUnlockCount(selectedFundi.id) === 1 ? 'client' : 'clients'}</p>
-                    ) : (
-                      <p>💡 You just unlocked this fundi. Other clients can now view this contact for free.</p>
-                    )}
-                    <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
-                  </div>
-                )}
+                <div className="text-green-700 text-xs text-center mt-2 space-y-1">
+                  <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
+                </div>
               </div>
 
               {/* Action Buttons */}

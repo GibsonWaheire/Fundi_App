@@ -99,13 +99,18 @@ const FundiTable = () => {
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
     
-    // Check if fundi is already unlocked by anyone
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
-    if (unlockInfo && unlockInfo.unlock_count > 0) {
-      // Fundi is already unlocked, show contact for free (for everyone)
-      setShowContactModal(true)
+    // Check if the current user has unlocked this specific fundi
+    if (user) {
+      const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
+      if (unlockInfo && unlockInfo.unlocked_by.includes(user.id)) {
+        // User has paid for this fundi, show contact
+        setShowContactModal(true)
+      } else {
+        // User hasn't paid for this fundi, require payment
+        setIsPhoneModalOpen(true)
+      }
     } else {
-      // Fundi not unlocked, require payment (for everyone, including logged-in users)
+      // No user logged in, require payment
       setIsPhoneModalOpen(true)
     }
   }
@@ -178,14 +183,25 @@ const FundiTable = () => {
   }
 
   const canViewContact = (fundiId) => {
-    // Check if fundi is already unlocked by anyone (for everyone)
+    // Check if the current user has unlocked this specific fundi
+    if (!user) return false;
+    
     const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo && unlockInfo.unlock_count > 0
+    if (!unlockInfo) return false;
+    
+    // Check if current user is in the unlocked_by array
+    return unlockInfo.unlocked_by.includes(user.id)
   }
 
   const getUnlockCount = (fundiId) => {
     const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
     return unlockInfo ? unlockInfo.unlock_count : 0
+  }
+
+  const hasUserUnlocked = (fundiId) => {
+    if (!user) return false;
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlocked_by.includes(user.id) : false
   }
 
   if (loading) {

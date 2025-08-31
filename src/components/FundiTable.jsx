@@ -130,9 +130,15 @@ const FundiTable = () => {
       if (userData && selectedFundi) {
         await fundiUnlockService.unlockFundi(selectedFundi.id, userData.id)
         
-        // Refresh unlock data
+        // Refresh unlock data immediately
         const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
         setFundiUnlocks(updatedUnlocks)
+        
+        // Show success message
+        console.log(`✅ Successfully unlocked ${selectedFundi.name} - Status changed from 🔒 Locked to 🔓 Unlocked`)
+        
+        // Show visual feedback
+        alert(`🎉 Success! ${selectedFundi.name} is now unlocked! You can now see their contact details.`)
       }
       
       setShowContactModal(true)
@@ -141,6 +147,48 @@ const FundiTable = () => {
       // Still show contact modal even if recording fails
       setShowContactModal(true)
     }
+  }
+
+  // Helper functions
+  const canViewContact = (fundiId) => {
+    // Check if the current user has unlocked this specific fundi
+    if (!user) return false;
+    
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    if (!unlockInfo) return false;
+    
+    // Check if current user is in the unlocked_by array
+    return unlockInfo.unlocked_by.includes(user.id)
+  }
+
+  const getLockStatus = (fundiId) => {
+    if (!user) return 'locked'; // Show as locked for non-logged users
+    return canViewContact(fundiId) ? 'unlocked' : 'locked';
+  }
+
+  const getUnlockCount = (fundiId) => {
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlock_count : 0
+  }
+
+  const hasUserUnlocked = (fundiId) => {
+    if (!user) return false;
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlocked_by.includes(user.id) : false
+  }
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const getSortIcon = (column) => {
+    if (sortBy !== column) return '↕️'
+    return sortOrder === 'asc' ? '↑' : '↓'
   }
 
   // Filter and sort fundis
@@ -169,47 +217,6 @@ const FundiTable = () => {
         return aValue < bValue ? 1 : -1
       }
     })
-
-  const handleSort = (column) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(column)
-      setSortOrder('asc')
-    }
-  }
-
-  const getSortIcon = (column) => {
-    if (sortBy !== column) return '↕️'
-    return sortOrder === 'asc' ? '↑' : '↓'
-  }
-
-  const canViewContact = (fundiId) => {
-    // Check if the current user has unlocked this specific fundi
-    if (!user) return false;
-    
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    if (!unlockInfo) return false;
-    
-    // Check if current user is in the unlocked_by array
-    return unlockInfo.unlocked_by.includes(user.id)
-  }
-
-  const getLockStatus = (fundiId) => {
-    if (!user) return 'locked'; // Show as locked for non-logged users
-    return canViewContact(fundiId) ? 'unlocked' : 'locked';
-  }
-
-  const getUnlockCount = (fundiId) => {
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo ? unlockInfo.unlock_count : 0
-  }
-
-  const hasUserUnlocked = (fundiId) => {
-    if (!user) return false;
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo ? unlockInfo.unlocked_by.includes(user.id) : false
-  }
 
   if (loading) {
     return (
@@ -544,6 +551,12 @@ const FundiTable = () => {
 
               {/* Success Message */}
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-center mb-2">
+                  <span className="text-2xl mr-2">🔓</span>
+                  <p className="text-green-800 text-sm font-semibold">
+                    <strong>Status Changed: Locked → Unlocked!</strong>
+                  </p>
+                </div>
                 <p className="text-green-800 text-sm text-center">
                   ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
                 </p>

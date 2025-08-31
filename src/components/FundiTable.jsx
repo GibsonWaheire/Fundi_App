@@ -19,7 +19,7 @@ const FundiTable = () => {
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [selectedFundi, setSelectedFundi] = useState(null)
-  const [userData, setUserData] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
   const [fundiUnlocks, setFundiUnlocks] = useState([])
 
   // Fetch fundis data and unlock tracking
@@ -27,15 +27,11 @@ const FundiTable = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        console.log('Fetching fundis and unlock data...')
         
         const [fundisData, unlocksData] = await Promise.all([
           authService.getAllFundis(),
           fundiUnlockService.getAllUnlocks()
         ])
-        
-        console.log('Fundis fetched successfully:', fundisData.length)
-        console.log('Unlock data fetched successfully:', unlocksData.length)
         
         setFundis(fundisData)
         setFundiUnlocks(unlocksData)
@@ -97,27 +93,42 @@ const FundiTable = () => {
     email: fundi.email
   }))
 
+  // Check if user can view contact for a specific fundi
+  const canViewContact = (fundiId) => {
+    if (!currentUser) return false;
+    
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    if (!unlockInfo) return false;
+    
+    return unlockInfo.unlocked_by.includes(currentUser.id)
+  }
+
+  // Get lock status for display
+  const getLockStatus = (fundiId) => {
+    if (!currentUser) return 'locked';
+    return canViewContact(fundiId) ? 'unlocked' : 'locked';
+  }
+
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
     
-    // Check if the current user has unlocked this specific fundi
-    if (user) {
-      const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
-      if (unlockInfo && unlockInfo.unlocked_by.includes(user.id)) {
-        // User has paid for this fundi, show contact
-        setShowContactModal(true)
-      } else {
-        // User hasn't paid for this fundi, require payment
-        setIsPhoneModalOpen(true)
-      }
+    if (currentUser && canViewContact(fundi.id)) {
+      // User has already paid for this fundi
+      setShowContactModal(true)
     } else {
-      // No user logged in, require payment
-      setIsPhoneModalOpen(true)
+      // User needs to pay
+      if (!currentUser) {
+        // No user logged in, start with phone login
+        setIsPhoneModalOpen(true)
+      } else {
+        // User logged in but hasn't paid, go directly to payment
+        setIsPaymentModalOpen(true)
+      }
     }
   }
 
-  const handlePhoneSuccess = (user) => {
-    setUserData(user)
+  const handlePhoneSuccess = (userData) => {
+    setCurrentUser(userData)
     setIsPhoneModalOpen(false)
     setIsPaymentModalOpen(true)
   }
@@ -126,55 +137,23 @@ const FundiTable = () => {
     try {
       setIsPaymentModalOpen(false)
       
-      // Record the unlock in the database
-      if (userData && selectedFundi) {
-        await fundiUnlockService.unlockFundi(selectedFundi.id, userData.id)
+      if (currentUser && selectedFundi) {
+        // Record the unlock
+        await fundiUnlockService.unlockFundi(selectedFundi.id, currentUser.id)
         
-        // Refresh unlock data immediately
+        // Refresh unlock data
         const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
         setFundiUnlocks(updatedUnlocks)
         
         // Show success message
-        console.log(`✅ Successfully unlocked ${selectedFundi.name} - Status changed from 🔒 Locked to 🔓 Unlocked`)
-        
-        // Show visual feedback
-        alert(`🎉 Success! ${selectedFundi.name} is now unlocked! You can now see their contact details.`)
+        alert(`🎉 Success! ${selectedFundi.name} is now unlocked!`)
       }
       
       setShowContactModal(true)
     } catch (error) {
       console.error('Error recording unlock:', error)
-      // Still show contact modal even if recording fails
-      setShowContactModal(true)
+      alert('Payment successful but there was an error recording the unlock. Please try again.')
     }
-  }
-
-  // Helper functions
-  const canViewContact = (fundiId) => {
-    // Check if the current user has unlocked this specific fundi
-    if (!user) return false;
-    
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    if (!unlockInfo) return false;
-    
-    // Check if current user is in the unlocked_by array
-    return unlockInfo.unlocked_by.includes(user.id)
-  }
-
-  const getLockStatus = (fundiId) => {
-    if (!user) return 'locked'; // Show as locked for non-logged users
-    return canViewContact(fundiId) ? 'unlocked' : 'locked';
-  }
-
-  const getUnlockCount = (fundiId) => {
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo ? unlockInfo.unlock_count : 0
-  }
-
-  const hasUserUnlocked = (fundiId) => {
-    if (!user) return false;
-    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
-    return unlockInfo ? unlockInfo.unlocked_by.includes(user.id) : false
   }
 
   const handleSort = (column) => {
@@ -244,7 +223,7 @@ const FundiTable = () => {
 
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-          {user && (
+          {currentUser && (
             <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -302,34 +281,32 @@ const FundiTable = () => {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
-          <div className="bg-white rounded-xl p-4 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
-                </h3>
-                <p className="text-gray-600">Ready to help with your project</p>
-                <div className="mt-2 flex items-center space-x-4 text-sm">
-                  <span className="flex items-center">
-                    <span className="text-blue-600 mr-1">🔓</span>
-                    <span className="text-gray-600">
-                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
-                    </span>
+        {/* Results Summary */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
+              </h3>
+              <p className="text-gray-600">Ready to help with your project</p>
+              <div className="mt-2 flex items-center space-x-4 text-sm">
+                <span className="flex items-center">
+                  <span className="text-blue-600 mr-1">🔓</span>
+                  <span className="text-gray-600">
+                    {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
                   </span>
-                  <span className="flex items-center">
-                    <span className="text-gray-600 mr-1">🔒</span>
-                    <span className="text-gray-600">
-                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
-                    </span>
+                </span>
+                <span className="flex items-center">
+                  <span className="text-gray-600 mr-1">🔒</span>
+                  <span className="text-gray-600">
+                    {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
                   </span>
-                </div>
+                </span>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
-                <div className="text-sm text-gray-500">Available</div>
-              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
+              <div className="text-sm text-gray-500">Total Fundis</div>
             </div>
           </div>
         </div>
@@ -338,9 +315,9 @@ const FundiTable = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto max-h-[70vh]">
             <table className="w-full">
-                              <thead className="bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0">
-                  <tr>
-                    <th className="px-4 py-3 text-left">
+              <thead className="bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('name')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -401,12 +378,7 @@ const FundiTable = () => {
                         </div>
                         <div>
                           <div className="font-semibold text-gray-900">{fundi.name}</div>
-                          {fundi.verified && (
-                            <div className="flex items-center text-xs text-green-600">
-                              <span className="mr-1">✓</span>
-                              <span>Verified</span>
-                            </div>
-                          )}
+                          <div className="text-sm text-gray-500">{fundi.experience}</div>
                         </div>
                       </div>
                     </td>
@@ -476,134 +448,115 @@ const FundiTable = () => {
           </div>
         </div>
 
-        {/* No Results */}
-        {filteredAndSortedFundis.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No fundis found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your search criteria or location</p>
-            <button
-              onClick={() => {
-                setSearchTerm('')
-                setSelectedService('all')
-                setSelectedLocation('all')
-              }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              Clear Filters
-            </button>
+        {/* Contact Modal */}
+        {showContactModal && selectedFundi && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                    {selectedFundi.avatar}
+                  </div>
+                  <h3 className="text-3xl font-bold mb-2">{selectedFundi.name}</h3>
+                  <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
+                  <div className="flex items-center justify-center mt-4">
+                    <span className="text-yellow-300 text-lg mr-2">⭐</span>
+                    <span className="font-semibold">{selectedFundi.rating}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                {/* Contact Details */}
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📞</span>
+                      <span className="text-gray-600">Phone</span>
+                    </div>
+                    <span className="font-semibold text-gray-900">{selectedFundi.phone}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📧</span>
+                      <span className="text-gray-600">Email</span>
+                    </div>
+                    <span className="font-semibold text-gray-900">{selectedFundi.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📍</span>
+                      <span className="text-gray-600">Location</span>
+                    </div>
+                    <span className="font-semibold text-gray-900">{selectedFundi.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">💰</span>
+                      <span className="text-gray-600">Rate</span>
+                    </div>
+                    <span className="font-semibold text-green-600">KSh {selectedFundi.hourlyRate}/hr</span>
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="text-2xl mr-2">🔓</span>
+                    <p className="text-green-800 text-sm font-semibold">
+                      <strong>Status Changed: Locked → Unlocked!</strong>
+                    </p>
+                  </div>
+                  <p className="text-green-800 text-sm text-center">
+                    ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
+                  </p>
+                  <div className="text-green-700 text-xs text-center mt-2 space-y-1">
+                    <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setShowContactModal(false)}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowContactModal(false)
+                      alert('Please sign up to access more features!')
+                      window.location.href = '/'
+                    }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+                  >
+                    Sign Up Free
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Modals */}
+        <PhoneLoginModal
+          isOpen={isPhoneModalOpen}
+          onClose={() => setIsPhoneModalOpen(false)}
+          onSuccess={handlePhoneSuccess}
+          showPayment={true}
+        />
+
+        <MpesaPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          onSuccess={handlePaymentSuccess}
+          fundi={selectedFundi}
+          phoneNumber={currentUser?.phone}
+        />
       </div>
-
-      {/* Contact Details Modal */}
-      {showContactModal && selectedFundi && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white rounded-t-3xl">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-                  {selectedFundi.avatar}
-                </div>
-                <h3 className="text-3xl font-bold mb-2">{selectedFundi.name}</h3>
-                <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
-                <div className="flex items-center justify-center mt-4">
-                  <span className="text-yellow-300 text-lg mr-2">⭐</span>
-                  <span className="font-semibold">{selectedFundi.rating}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-8">
-              {/* Contact Details */}
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📞</span>
-                    <span className="text-gray-600">Phone</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">{selectedFundi.phone}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📧</span>
-                    <span className="text-gray-600">Email</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">{selectedFundi.email}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📍</span>
-                    <span className="text-gray-600">Location</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">{selectedFundi.location}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">💰</span>
-                    <span className="text-gray-600">Rate</span>
-                  </div>
-                  <span className="font-semibold text-green-600">KSh {selectedFundi.hourlyRate}/hr</span>
-                </div>
-              </div>
-
-              {/* Success Message */}
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-center mb-2">
-                  <span className="text-2xl mr-2">🔓</span>
-                  <p className="text-green-800 text-sm font-semibold">
-                    <strong>Status Changed: Locked → Unlocked!</strong>
-                  </p>
-                </div>
-                <p className="text-green-800 text-sm text-center">
-                  ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
-                </p>
-                <div className="text-green-700 text-xs text-center mt-2 space-y-1">
-                  <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setShowContactModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowContactModal(false)
-                    alert('Please sign up to access more features!')
-                    window.location.href = '/'
-                  }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
-                >
-                  Sign Up Free
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modals */}
-      <PhoneLoginModal
-        isOpen={isPhoneModalOpen}
-        onClose={() => setIsPhoneModalOpen(false)}
-        onSuccess={handlePhoneSuccess}
-        showPayment={true}
-      />
-
-      <MpesaPaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        onSuccess={handlePaymentSuccess}
-        fundi={selectedFundi}
-        phoneNumber={userData?.phone}
-      />
     </div>
   )
 }

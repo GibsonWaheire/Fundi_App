@@ -195,6 +195,11 @@ const FundiTable = () => {
     return unlockInfo.unlocked_by.includes(user.id)
   }
 
+  const getLockStatus = (fundiId) => {
+    if (!user) return 'locked'; // Show as locked for non-logged users
+    return canViewContact(fundiId) ? 'unlocked' : 'locked';
+  }
+
   const getUnlockCount = (fundiId) => {
     const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
     return unlockInfo ? unlockInfo.unlock_count : 0
@@ -299,22 +304,20 @@ const FundiTable = () => {
                   Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
                 </h3>
                 <p className="text-gray-600">Ready to help with your project</p>
-                {user && (
-                  <div className="mt-2 flex items-center space-x-4 text-sm">
-                    <span className="flex items-center">
-                      <span className="text-blue-600 mr-1">🔓</span>
-                      <span className="text-gray-600">
-                        {filteredAndSortedFundis.filter(f => canViewContact(f.id)).length} unlocked
-                      </span>
+                <div className="mt-2 flex items-center space-x-4 text-sm">
+                  <span className="flex items-center">
+                    <span className="text-blue-600 mr-1">🔓</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
                     </span>
-                    <span className="flex items-center">
-                      <span className="text-gray-600 mr-1">🔒</span>
-                      <span className="text-gray-600">
-                        {filteredAndSortedFundis.filter(f => !canViewContact(f.id)).length} locked
-                      </span>
+                  </span>
+                  <span className="flex items-center">
+                    <span className="text-gray-600 mr-1">🔒</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
                     </span>
-                  </div>
-                )}
+                  </span>
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
@@ -326,11 +329,11 @@ const FundiTable = () => {
 
         {/* Fundis Table */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[70vh]">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <tr>
-                  <th className="px-6 py-4 text-left">
+                              <thead className="bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('name')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -339,7 +342,7 @@ const FundiTable = () => {
                       <span>{getSortIcon('name')}</span>
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('service')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -348,7 +351,7 @@ const FundiTable = () => {
                       <span>{getSortIcon('service')}</span>
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('location')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -357,7 +360,7 @@ const FundiTable = () => {
                       <span>{getSortIcon('location')}</span>
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('rating')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -366,7 +369,7 @@ const FundiTable = () => {
                       <span>{getSortIcon('rating')}</span>
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left">
+                  <th className="px-4 py-3 text-left">
                     <button 
                       onClick={() => handleSort('hourlyRate')}
                       className="flex items-center space-x-2 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
@@ -375,16 +378,16 @@ const FundiTable = () => {
                       <span>{getSortIcon('hourlyRate')}</span>
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left">Experience</th>
-                  <th className="px-6 py-4 text-left">Status</th>
-                  <th className="px-6 py-4 text-center">Access</th>
-                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-4 py-3 text-left">Experience</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-center">Access</th>
+                  <th className="px-4 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredAndSortedFundis.map((fundi, index) => (
                   <tr key={fundi.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-lg">
                           {fundi.avatar}
@@ -400,25 +403,25 @@ const FundiTable = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="text-gray-900">{fundi.service}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="text-gray-600">📍 {fundi.location}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex items-center">
                         <span className="text-yellow-400 mr-1">⭐</span>
                         <span className="font-semibold">{fundi.rating}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="font-semibold text-green-600">KSh {fundi.hourlyRate}/hr</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="text-gray-600">{fundi.experience}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         fundi.available 
                           ? 'bg-green-100 text-green-800' 
@@ -427,26 +430,26 @@ const FundiTable = () => {
                         {fundi.available ? '🟢 Available' : '🔴 Busy'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 text-center">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        canViewContact(fundi.id)
+                        getLockStatus(fundi.id) === 'unlocked'
                           ? 'bg-blue-100 text-blue-800' 
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {canViewContact(fundi.id) ? '🔓 Unlocked' : '🔒 Locked'}
+                        {getLockStatus(fundi.id) === 'unlocked' ? '🔓 Unlocked' : '🔒 Locked'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => handleViewContact(fundi)}
                         disabled={!fundi.available}
                         className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                          canViewContact(fundi.id)
+                          getLockStatus(fundi.id) === 'unlocked'
                             ? 'bg-blue-600 text-white hover:bg-blue-700'
                             : 'bg-green-600 text-white hover:bg-green-700'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        {canViewContact(fundi.id) ? (
+                        {getLockStatus(fundi.id) === 'unlocked' ? (
                           <span className="flex items-center">
                             <span className="mr-1">📞</span>
                             Contact

@@ -194,6 +194,11 @@ export default function PublicFindFundis() {
     return unlockInfo.unlocked_by.includes(user.id)
   }
 
+  const getLockStatus = (fundiId) => {
+    if (!user) return 'locked'; // Show as locked for non-logged users
+    return canViewContact(fundiId) ? 'unlocked' : 'locked';
+  }
+
   const getUnlockCount = (fundiId) => {
     const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
     return unlockInfo ? unlockInfo.unlock_count : 0
@@ -372,22 +377,20 @@ export default function PublicFindFundis() {
                   Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
                 </h3>
                 <p className="text-gray-600">Ready to help with your project</p>
-                {user && (
-                  <div className="mt-2 flex items-center space-x-4 text-sm">
-                    <span className="flex items-center">
-                      <span className="text-blue-600 mr-1">🔓</span>
-                      <span className="text-gray-600">
-                        {filteredAndSortedFundis.filter(f => canViewContact(f.id)).length} unlocked
-                      </span>
+                <div className="mt-2 flex items-center space-x-4 text-sm">
+                  <span className="flex items-center">
+                    <span className="text-blue-600 mr-1">🔓</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'unlocked').length} unlocked
                     </span>
-                    <span className="flex items-center">
-                      <span className="text-gray-600 mr-1">🔒</span>
-                      <span className="text-gray-600">
-                        {filteredAndSortedFundis.filter(f => !canViewContact(f.id)).length} locked
-                      </span>
+                  </span>
+                  <span className="flex items-center">
+                    <span className="text-gray-600 mr-1">🔒</span>
+                    <span className="text-gray-600">
+                      {filteredAndSortedFundis.filter(f => getLockStatus(f.id) === 'locked').length} locked
                     </span>
-                  </div>
-                )}
+                  </span>
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
@@ -426,11 +429,11 @@ export default function PublicFindFundis() {
                         {fundi.available ? '🟢 Available' : '🔴 Busy'}
                       </span>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        canViewContact(fundi.id)
+                        getLockStatus(fundi.id) === 'unlocked'
                           ? 'bg-blue-100 text-blue-800' 
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {canViewContact(fundi.id) ? '🔓 Unlocked' : '🔒 Locked'}
+                        {getLockStatus(fundi.id) === 'unlocked' ? '🔓 Unlocked' : '🔒 Locked'}
                       </span>
                     </div>
                     
@@ -467,12 +470,12 @@ export default function PublicFindFundis() {
                         onClick={() => handleViewContact(fundi)}
                         disabled={!fundi.available}
                       className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                          canViewContact(fundi.id)
+                          getLockStatus(fundi.id) === 'unlocked'
                           ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                           : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
                       } disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105`}
                       >
-                        {canViewContact(fundi.id) ? (
+                        {getLockStatus(fundi.id) === 'unlocked' ? (
                           <span className="flex items-center">
                           <span className="mr-2">📞</span>
                           Contact Now

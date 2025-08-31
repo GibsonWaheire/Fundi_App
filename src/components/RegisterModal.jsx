@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
+import { validateRegistrationForm, sanitizeInput } from '../utils/validation'
 
 const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [formData, setFormData] = useState({
@@ -20,50 +21,63 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState({})
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrors({})
     
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
+    // Sanitize inputs
+    const sanitizedData = {
+      ...formData,
+      name: sanitizeInput(formData.name),
+      email: sanitizeInput(formData.email),
+      phone: sanitizeInput(formData.phone),
+      location: formData.location ? sanitizeInput(formData.location) : '',
+      bio: formData.bio ? sanitizeInput(formData.bio) : ''
+    }
+    
+    // Validate form data
+    const validation = validateRegistrationForm(sanitizedData)
+    if (!validation.isValid) {
+      setErrors(validation.errors)
       setIsLoading(false)
       return
     }
 
     // Check if email already exists
-    const existingUser = await authService.getUserByEmail(formData.email)
+    const existingUser = await authService.getUserByEmail(sanitizedData.email)
     if (existingUser) {
-      alert('Email already registered. Please use a different email or sign in.')
+      setErrors({ email: ['Email already registered. Please use a different email or sign in.'] })
       setIsLoading(false)
       return
     }
 
     try {
       let result
-      if (formData.userType === 'fundi') {
+      if (sanitizedData.userType === 'fundi') {
         // Register fundi
         result = await authService.registerFundi({
-          username: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          specialization: formData.specialization || 'General',
-          experience: formData.experience || '1 year',
-          location: formData.location || 'Nairobi',
-          bio: formData.bio || 'Professional fundi',
-          hourly_rate: formData.hourly_rate || 1000
+          username: sanitizedData.name,
+          email: sanitizedData.email,
+          password: sanitizedData.password,
+          phone: sanitizedData.phone,
+          specialization: sanitizedData.specialization || 'General',
+          experience: sanitizedData.experience || '1 year',
+          location: sanitizedData.location || 'Nairobi',
+          bio: sanitizedData.bio || 'Professional fundi',
+          hourly_rate: sanitizedData.hourly_rate || 1000
         })
       } else {
         // Register client
         result = await authService.registerUser({
-          username: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone
+          username: sanitizedData.name,
+          email: sanitizedData.email,
+          password: sanitizedData.password,
+          phone: sanitizedData.phone
         })
       }
 
@@ -74,12 +88,12 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
         // Redirect to dashboard after successful registration
         navigate('/dashboard')
       } else {
-        alert(result.error || 'Registration failed')
+        setErrors({ general: [result.error || 'Registration failed'] })
         setIsLoading(false)
       }
     } catch (error) {
       console.error('Registration error:', error)
-      alert('Registration failed. Please try again.')
+      setErrors({ general: ['Registration failed. Please try again.'] })
       setIsLoading(false)
     }
   }
@@ -116,6 +130,17 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 pb-8">
+          {/* General Error Display */}
+          {errors.general && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-sm text-red-600">
+                {errors.general.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {/* User Type Selection */}
             <div>
@@ -175,10 +200,19 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 ${
+                  errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your full name"
                 required
               />
+              {errors.name && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.name.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -190,10 +224,19 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 ${
+                  errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your email"
                 required
               />
+              {errors.email && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.email.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -205,10 +248,19 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 ${
+                  errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your phone number"
                 required
               />
+              {errors.phone && (
+                <div className="mt-1 text-sm text-red-600">
+                  {errors.phone.map((error, index) => (
+                    <div key={index}>{error}</div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Fundi-specific fields */}

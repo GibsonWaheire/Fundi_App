@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
+import { fundiUnlockService } from '../services/fundiUnlockService'
 import PhoneLoginModal from './PhoneLoginModal'
 import MpesaPaymentModal from './MpesaPaymentModal'
 
@@ -11,28 +12,45 @@ export default function PublicFindFundis() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedService, setSelectedService] = useState('all')
   const [selectedLocation, setSelectedLocation] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
+  const [sortOrder, setSortOrder] = useState('asc')
   const [showContactModal, setShowContactModal] = useState(false)
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [fundis, setFundis] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [userData, setUserData] = useState(null)
-  const [paidFundiId, setPaidFundiId] = useState(null) // Track which fundi was paid for
+  const [fundiUnlocks, setFundiUnlocks] = useState([])
+  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
 
-  // Fetch fundis data
+  // Fetch fundis data and unlock tracking
   useEffect(() => {
-    const fetchFundis = async () => {
+    const fetchData = async () => {
       try {
-        const fundisData = await authService.getAllFundis()
+        setLoading(true)
+        setError(null)
+        console.log('Fetching fundis and unlock data...')
+        
+        const [fundisData, unlocksData] = await Promise.all([
+          authService.getAllFundis(),
+          fundiUnlockService.getAllUnlocks()
+        ])
+        
+        console.log('Fundis fetched successfully:', fundisData.length)
+        console.log('Unlock data fetched successfully:', unlocksData.length)
+        
         setFundis(fundisData)
-        setLoading(false)
+        setFundiUnlocks(unlocksData)
       } catch (error) {
-        console.error('Error fetching fundis:', error)
+        console.error('Error fetching data:', error)
+        setError('Failed to load data. Please try again.')
+      } finally {
         setLoading(false)
       }
     }
 
-    fetchFundis()
+    fetchData()
   }, [])
 
   const services = [
@@ -67,19 +85,6 @@ export default function PublicFindFundis() {
     return avatars[specialization] || '🔧'
   }
 
-  // Helper function to get specialties by specialization
-  const getSpecialtiesBySpecialization = (specialization) => {
-    const specialties = {
-      'Plumbing': ['Pipe Repair', 'Drainage', 'Installation'],
-      'Electrical': ['Wiring', 'Installation', 'Repairs'],
-      'Carpentry': ['Furniture', 'Cabinets', 'Repairs'],
-      'Painting': ['Interior', 'Exterior', 'Wallpaper'],
-      'Construction': ['Renovation', 'Foundation', 'Roofing'],
-      'Cleaning': ['Deep Cleaning', 'Post-Construction', 'Regular']
-    }
-    return specialties[specialization] || ['General Repairs']
-  }
-
   // Transform fundis data for display
   const transformedFundis = fundis.map(fundi => ({
     id: fundi.id,
@@ -87,28 +92,26 @@ export default function PublicFindFundis() {
     service: fundi.specialization,
     location: fundi.location,
     rating: fundi.rating || 4.5,
-    reviews: 0, // Will be calculated from reviews
-    hourlyRate: `KSh ${fundi.hourly_rate}`,
+    hourlyRate: fundi.hourly_rate,
     experience: fundi.experience,
     verified: fundi.is_active,
-    available: fundi.is_available !== false, // Default to true if not explicitly false
+    available: fundi.is_available !== false,
     avatar: getAvatarBySpecialization(fundi.specialization),
-    specialties: getSpecialtiesBySpecialization(fundi.specialization),
     phone: fundi.phone,
-    email: fundi.email
+    email: fundi.email,
+    bio: fundi.bio || 'Professional fundi with excellent service'
   }))
 
   const handleViewContact = (fundi) => {
     setSelectedFundi(fundi)
     
-    if (user) {
-      // If user is logged in, show contact directly
-      setShowContactModal(true)
-    } else if (paidFundiId === fundi.id) {
-      // If this fundi was already paid for, show contact
+    // Check if fundi is already unlocked by anyone
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundi.id)
+    if (unlockInfo && unlockInfo.unlock_count > 0) {
+      // Fundi is already unlocked, show contact for free (for everyone)
       setShowContactModal(true)
     } else {
-      // If not logged in and not paid for this fundi, require payment
+      // Fundi not unlocked, require payment (for everyone, including logged-in users)
       setIsPhoneModalOpen(true)
     }
   }
@@ -119,28 +122,77 @@ export default function PublicFindFundis() {
     setIsPaymentModalOpen(true)
   }
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
+    try {
     setIsPaymentModalOpen(false)
-    setPaidFundiId(selectedFundi.id) // Mark this fundi as paid for
+      
+      // Record the unlock in the database
+      if (userData && selectedFundi) {
+        await fundiUnlockService.unlockFundi(selectedFundi.id, userData.id)
+        
+        // Refresh unlock data
+        const updatedUnlocks = await fundiUnlockService.getAllUnlocks()
+        setFundiUnlocks(updatedUnlocks)
+      }
+      
+      setShowContactModal(true)
+    } catch (error) {
+      console.error('Error recording unlock:', error)
+      // Still show contact modal even if recording fails
     setShowContactModal(true)
+    }
   }
 
+  // Filter and sort fundis
+  const filteredAndSortedFundis = transformedFundis
+    .filter(fundi => {
+      const matchesSearch = fundi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           fundi.service.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesService = selectedService === 'all' || fundi.service.toLowerCase() === selectedService
+      const matchesLocation = selectedLocation === 'all' || fundi.location.toLowerCase().includes(selectedLocation)
+      const matchesUnlockFilter = !showUnlockedOnly || isAlreadyUnlocked(fundi.id)
+      
+      return matchesSearch && matchesService && matchesLocation && matchesUnlockFilter
+    })
+    .sort((a, b) => {
+      let aValue = a[sortBy]
+      let bValue = b[sortBy]
+      
+      if (sortBy === 'hourlyRate') {
+        aValue = parseFloat(aValue)
+        bValue = parseFloat(bValue)
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
 
-
-  const handleSignUpPrompt = () => {
-    setShowContactModal(false)
-    // Redirect based on user status
-    window.location.href = user ? '/dashboard' : '/'
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
   }
 
-  const filteredFundis = transformedFundis.filter(fundi => {
-    const matchesSearch = fundi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         fundi.service.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesService = selectedService === 'all' || fundi.service.toLowerCase() === selectedService
-    const matchesLocation = selectedLocation === 'all' || fundi.location.toLowerCase().includes(selectedLocation)
-    
-    return matchesSearch && matchesService && matchesLocation
-  })
+  const canViewContact = (fundiId) => {
+    // Check if fundi is already unlocked by anyone (for everyone)
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo && unlockInfo.unlock_count > 0
+  }
+
+  const getUnlockCount = (fundiId) => {
+    const unlockInfo = fundiUnlocks.find(unlock => unlock.fundi_id === fundiId)
+    return unlockInfo ? unlockInfo.unlock_count : 0
+  }
+
+  const isAlreadyUnlocked = (fundiId) => {
+    return getUnlockCount(fundiId) > 0
+  }
 
   // Show loading state
   if (loading) {
@@ -149,6 +201,25 @@ export default function PublicFindFundis() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading fundis...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Fundis</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     )
@@ -164,10 +235,7 @@ export default function PublicFindFundis() {
               Find Your Perfect Fundi
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              {user 
-                ? "Browse verified professionals in your area. As a registered user, you have free access to all contact details."
-                : "Browse verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details. Each payment unlocks one fundi's contact information."
-              }
+              Browse verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details, or view already unlocked fundis for free.
             </p>
             <div className="flex items-center justify-center space-x-4">
               <Link to="/" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300">
@@ -214,6 +282,31 @@ export default function PublicFindFundis() {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Search & Filter</h2>
             <p className="text-gray-600">Find the perfect fundi for your project</p>
           </div>
+          
+          {/* Unlock Filter Toggle */}
+          {!user && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🔓</span>
+                  <div>
+                    <h3 className="font-semibold text-green-900">Already Unlocked Fundis</h3>
+                    <p className="text-green-800 text-sm">View fundis that have been unlocked by other clients</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowUnlockedOnly(!showUnlockedOnly)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    showUnlockedOnly
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {showUnlockedOnly ? 'Show All Fundis' : 'Show Unlocked Only'}
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-2">
@@ -266,143 +359,114 @@ export default function PublicFindFundis() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Found <span className="text-blue-600">{filteredFundis.length}</span> fundis
+                  Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
                 </h3>
                 <p className="text-gray-600">Ready to help with your project</p>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">{filteredFundis.length}</div>
+                <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
                 <div className="text-sm text-gray-500">Available</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Fundis Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredFundis.map((fundi) => (
-            <div key={fundi.id} className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              {/* Header with gradient */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-3xl">
-                      {fundi.avatar}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold">{fundi.name}</h3>
-                      <p className="text-blue-100">{fundi.service}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {fundi.verified && (
-                      <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                        ✅ Verified
+        {/* Fundis List - Modern Design */}
+        <div className="space-y-4">
+          {filteredAndSortedFundis.map((fundi) => (
+            <div key={fundi.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                {/* Fundi Info */}
+                <div className="flex items-start space-x-4 flex-1">
+                  {/* Avatar */}
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl flex-shrink-0">
+                          {fundi.avatar}
+                        </div>
+                  
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-xl font-bold text-gray-900 truncate">{fundi.name}</h3>
+                          {fundi.verified && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                          ✓ Verified
+                        </span>
+                      )}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        fundi.available 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {fundi.available ? '🟢 Available' : '🔴 Busy'}
                       </span>
-                    )}
-                    {!user && paidFundiId === fundi.id && (
-                      <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-medium">
-                        💳 Paid
-                      </span>
-                    )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <span className="mr-2">🔧</span>
+                        <span className="font-medium">{fundi.service}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">📍</span>
+                        <span>{fundi.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">⭐</span>
+                        <span className="font-medium">{fundi.rating}/5.0</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">💰</span>
+                        <span className="font-semibold text-green-600">KSh {fundi.hourlyRate}/hr</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 text-sm text-gray-500">
+                      <span className="mr-4">📚 {fundi.experience}</span>
+                      <span>💬 {fundi.bio.substring(0, 50)}...</span>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Status */}
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm px-3 py-1 rounded-full ${
-                    fundi.available 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-red-500 text-white'
-                  }`}>
-                    {fundi.available ? '🟢 Available Now' : '🔴 Currently Busy'}
-                  </span>
-                  <div className="flex items-center text-yellow-300">
-                    <span className="text-lg mr-1">⭐</span>
-                    <span className="font-semibold">{fundi.rating}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                {/* Key Details */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="text-center p-3 bg-gray-50 rounded-xl">
-                    <div className="text-2xl mb-1">📍</div>
-                    <div className="text-sm font-medium text-gray-900">{fundi.location}</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-xl">
-                    <div className="text-2xl mb-1">💰</div>
-                    <div className="text-sm font-medium text-green-600">{fundi.hourlyRate}</div>
-                  </div>
-                </div>
-
-                {/* Experience */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Experience</span>
-                    <span className="font-semibold text-gray-900">{fundi.experience}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Reviews</span>
-                    <span className="font-semibold text-gray-900">{fundi.reviews} reviews</span>
-                  </div>
-                </div>
-
-                {/* Specialties */}
-                <div className="mb-6">
-                  <p className="text-sm font-semibold text-gray-700 mb-3">Specialties</p>
-                  <div className="flex flex-wrap gap-2">
-                    {fundi.specialties.slice(0, 3).map((specialty, index) => (
-                      <span key={index} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
-                        {specialty}
-                      </span>
-                    ))}
-                    {fundi.specialties.length > 3 && (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
-                        +{fundi.specialties.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
                 {/* Action Button */}
-                <button
-                  onClick={() => handleViewContact(fundi)}
-                  disabled={!fundi.available}
-                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                    user 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                      : paidFundiId === fundi.id
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                      : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-                >
-                  {user ? (
-                    <span className="flex items-center justify-center">
-                      <span className="mr-2">📞</span>
-                      View Contact Details
-                    </span>
-                  ) : paidFundiId === fundi.id ? (
-                    <span className="flex items-center justify-center">
-                      <span className="mr-2">📞</span>
-                      View Contact Details
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      <span className="mr-2">💳</span>
-                      Pay KSh 50 to View Contact
-                    </span>
-                  )}
-                </button>
+                <div className="mt-4 lg:mt-0 lg:ml-6 flex-shrink-0">
+                  <div className="text-center">
+                    {isAlreadyUnlocked(fundi.id) && !user && (
+                      <div className="mb-2 p-2 bg-green-100 rounded-lg">
+                        <div className="text-xs text-green-800 font-medium">
+                          🔓 Unlocked by {getUnlockCount(fundi.id)} {getUnlockCount(fundi.id) === 1 ? 'client' : 'clients'}
+                        </div>
+                      </div>
+                    )}
+                      <button
+                        onClick={() => handleViewContact(fundi)}
+                        disabled={!fundi.available}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                          canViewContact(fundi.id)
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                          : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                      } disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105`}
+                      >
+                        {canViewContact(fundi.id) ? (
+                          <span className="flex items-center">
+                          <span className="mr-2">📞</span>
+                          Contact Now
+                          </span>
+                        ) : (
+                          <span className="flex items-center">
+                          <span className="mr-2">💳</span>
+                            Pay KSh 50
+                          </span>
+                        )}
+                      </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* No Results */}
-        {filteredFundis.length === 0 && (
+        {filteredAndSortedFundis.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No fundis found</h3>
@@ -423,19 +487,16 @@ export default function PublicFindFundis() {
         {/* CTA Section */}
         <div className="mt-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            {user ? 'Ready to Manage Your Projects?' : 'Ready to Get Started?'}
+            Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-6">
-            {user 
-              ? "Access your dashboard to manage bookings, payments, and more"
-              : "Sign up for free to access all features and manage your projects"
-            }
+            Sign up for free to access all features and manage your projects
           </p>
           <Link
-            to={user ? "/dashboard" : "/"}
+            to="/"
             className="inline-block px-8 py-4 bg-white text-blue-600 text-lg font-semibold rounded-xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-2xl"
           >
-            {user ? 'Go to Dashboard' : 'Sign Up Now - It\'s Free!'}
+            Sign Up Now - It's Free!
           </Link>
         </div>
       </div>
@@ -454,7 +515,7 @@ export default function PublicFindFundis() {
                 <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
                 <div className="flex items-center justify-center mt-4">
                   <span className="text-yellow-300 text-lg mr-2">⭐</span>
-                  <span className="font-semibold">{selectedFundi.rating} ({selectedFundi.reviews} reviews)</span>
+                  <span className="font-semibold">{selectedFundi.rating}</span>
                 </div>
               </div>
             </div>
@@ -489,44 +550,24 @@ export default function PublicFindFundis() {
                     <span className="text-2xl mr-3">💰</span>
                     <span className="text-gray-600">Rate</span>
                   </div>
-                  <span className="font-semibold text-green-600">{selectedFundi.hourlyRate}</span>
+                  <span className="font-semibold text-green-600">KSh {selectedFundi.hourlyRate}/hr</span>
                 </div>
               </div>
-
-              {/* Booking Alert for Non-Authenticated Users */}
-              {!user && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                  <div className="flex items-start">
-                    <span className="text-2xl mr-3">💡</span>
-                    <div>
-                      <h4 className="font-semibold text-blue-900 mb-2">Want to Book an Appointment?</h4>
-                      <p className="text-blue-800 text-sm mb-4">
-                        To book appointments, manage your projects, and access more features, you'll need to sign up for a free account.
-                      </p>
-                      <button
-                        onClick={() => {
-                          setShowContactModal(false)
-                          alert('Please sign up to book appointments and manage your projects!')
-                          window.location.href = '/'
-                        }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                      >
-                        Sign Up Now - It's Free!
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Success Message */}
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                 <p className="text-green-800 text-sm text-center">
-                  ✅ <strong>Payment Successful!</strong> You can now contact this fundi directly.
+                  ✅ <strong>Access Granted!</strong> You can now contact this fundi directly.
                 </p>
                 {!user && (
-                  <p className="text-green-700 text-xs text-center mt-2">
-                    💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.
-                  </p>
+                  <div className="text-green-700 text-xs text-center mt-2 space-y-1">
+                    {isAlreadyUnlocked(selectedFundi.id) ? (
+                      <p>🔓 This fundi was unlocked by {getUnlockCount(selectedFundi.id)} {getUnlockCount(selectedFundi.id) === 1 ? 'client' : 'clients'}</p>
+                    ) : (
+                      <p>💡 You just unlocked this fundi. Other clients can now view this contact for free.</p>
+                    )}
+                    <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
+                  </div>
                 )}
               </div>
 
@@ -538,14 +579,6 @@ export default function PublicFindFundis() {
                 >
                   Close
                 </button>
-                {user ? (
-                  <Link
-                    to="/dashboard"
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-center"
-                  >
-                    Go to Dashboard
-                  </Link>
-                ) : (
                   <button
                     onClick={() => {
                       setShowContactModal(false)
@@ -556,7 +589,6 @@ export default function PublicFindFundis() {
                   >
                     Sign Up Free
                   </button>
-                )}
               </div>
             </div>
           </div>
@@ -578,7 +610,6 @@ export default function PublicFindFundis() {
         fundi={selectedFundi}
         phoneNumber={userData?.phone}
       />
-
     </div>
   )
 }

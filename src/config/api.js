@@ -11,7 +11,8 @@ const API_CONFIG = {
       bookings: '/bookings',
       reviews: '/reviews',
       payments: '/payments',
-      categories: '/categories'
+      categories: '/categories',
+      fundiUnlocks: '/fundi_unlocks'
     }
   },
   
@@ -24,7 +25,8 @@ const API_CONFIG = {
       bookings: '/bookings',
       reviews: '/reviews',
       payments: '/payments',
-      categories: '/categories'
+      categories: '/categories',
+      fundiUnlocks: '/fundi_unlocks'
     }
   }
 };

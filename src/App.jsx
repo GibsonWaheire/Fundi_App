@@ -5,9 +5,11 @@ import Dashboard from './components/Dashboard'
 import FundiProfile from './components/FundiProfile'
 import FundiPage from './components/FundiPage'
 import PublicFindFundis from './components/PublicFindFundis'
+import FundiTable from './components/FundiTable'
 import About from './components/About'
 import Contact from './components/Contact'
 import ProtectedRoute from './components/ProtectedRoute'
+import ErrorBoundary from './components/ErrorBoundary'
 import { AuthProvider } from './contexts/AuthContext'
 import './index.css'
 
@@ -56,6 +58,7 @@ function AppContent() {
         <Route path="/fundi-profile" element={<FundiProfile />} />
         <Route path="/fundi" element={<FundiPage />} />
         <Route path="/find-fundis" element={<PublicFindFundis />} />
+        <Route path="/fundi-table" element={<FundiTable />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
@@ -65,11 +68,13 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

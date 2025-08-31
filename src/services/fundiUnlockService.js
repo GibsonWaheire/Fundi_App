@@ -7,7 +7,7 @@ export const fundiUnlockService = {
   // Get all fundi unlocks
   async getAllUnlocks() {
     try {
-      const response = await fetch(buildApiUrl('fundiUnlocks'));
+      const response = await fetch(buildApiUrl('fundi_unlocks'));
       if (!response.ok) {
         throw new Error('Failed to fetch fundi unlocks');
       }
@@ -21,7 +21,7 @@ export const fundiUnlockService = {
   // Get unlock info for a specific fundi
   async getFundiUnlock(fundiId) {
     try {
-      const response = await fetch(`${buildApiUrl('fundiUnlocks')}?fundi_id=${fundiId}`);
+      const response = await fetch(`${buildApiUrl('fundi_unlocks')}?fundi_id=${fundiId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch fundi unlock');
       }
@@ -60,7 +60,7 @@ export const fundiUnlockService = {
             last_unlocked_at: new Date().toISOString()
           };
           
-          const response = await fetch(`${buildApiUrl('fundiUnlocks')}/${existingUnlock.id}`, {
+          const response = await fetch(`${buildApiUrl('fundi_unlocks')}/${existingUnlock.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export const fundiUnlockService = {
           last_unlocked_at: new Date().toISOString()
         };
         
-        const response = await fetch(buildApiUrl('fundiUnlocks'), {
+        const response = await fetch(buildApiUrl('fundi_unlocks'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

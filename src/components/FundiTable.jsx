@@ -212,8 +212,6 @@ const FundiTable = () => {
           </div>
         </div>
 
-        
-
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

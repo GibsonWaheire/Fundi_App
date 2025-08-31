@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentSuccess, phoneNumber: initialPhoneNumber }) => {
+const MpesaPaymentModal = ({ isOpen, onClose, fundi, amount = 50, onPaymentSuccess, phoneNumber: initialPhoneNumber }) => {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState(null)
@@ -9,7 +9,9 @@ const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentS
   // Set initial phone number if provided
   useEffect(() => {
     if (initialPhoneNumber) {
-      setPhoneNumber(initialPhoneNumber.replace('+254', ''))
+      // Extract the 9-digit number from +254 format
+      const cleanNumber = initialPhoneNumber.replace('+254', '')
+      setPhoneNumber(cleanNumber)
     }
   }, [initialPhoneNumber])
 
@@ -67,7 +69,7 @@ const MpesaPaymentModal = ({ isOpen, onClose, fundiName, amount = 50, onPaymentS
               💳
             </div>
             <h2 className="text-3xl font-bold mb-2">M-Pesa Payment</h2>
-            <p className="text-green-100 text-lg">Pay KSh {amount} to view {fundiName}'s contact details</p>
+            <p className="text-green-100 text-lg">Pay KSh {amount} to view {fundi?.name || 'Fundi'}'s contact details</p>
           </div>
         </div>
 

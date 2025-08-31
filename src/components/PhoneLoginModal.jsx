@@ -13,8 +13,14 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
     e.preventDefault()
     setError('')
     
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError('Please enter a valid phone number')
+    // Validate phone number format
+    if (!phoneNumber || phoneNumber.length < 9) {
+      setError('Please enter a valid phone number (9 digits)')
+      return
+    }
+    
+    if (!phoneNumber.startsWith('7')) {
+      setError('Phone number must start with 7')
       return
     }
 
@@ -27,7 +33,7 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
       // Create user object with phone number
       const userData = {
         id: Date.now().toString(),
-        phone: phoneNumber,
+        phone: `+254${phoneNumber}`,
         name: `User ${phoneNumber.slice(-4)}`,
         isVerified: true
       }
@@ -87,14 +93,19 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 9)
+                    setPhoneNumber(value)
+                    setError('')
+                  }}
                   placeholder="7XX XXX XXX"
                   className="w-full pl-16 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200"
+                  maxLength="9"
                   disabled={isLoading}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-3 text-center">
-                We'll send you a verification code via SMS
+                Enter the phone number registered with M-Pesa (9 digits starting with 7)
               </p>
             </div>
 

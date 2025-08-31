@@ -6,11 +6,12 @@ This CLI demonstrates basic database operations with SQLAlchemy ORM.
 
 import sys
 from helpers import (
-    list_fundis, create_fundi, delete_fundi, search_fundi_by_skill,
+    list_fundis, create_fundi_profile, delete_fundi, search_fundis,
     list_jobs, create_job, delete_job, update_job_status,
-    view_jobs_for_fundi, match_and_assign_job, get_pending_jobs, seed_sample_data
+    view_job_details, assign_job_to_fundi, list_jobs_by_status, seed_sample_data,
+    create_user, list_users, delete_user, list_categories, create_category
 )
-from db.models import get_session
+from db.models import get_session, User, Fundi, Job, Category
 
 
 def print_welcome():
@@ -26,15 +27,18 @@ def print_welcome():
 def print_menu():
     """Show the main menu"""
     print("\n📋 MAIN MENU")
-    print("1) Create Fundi")
-    print("2) List Fundis") 
-    print("3) Search Fundis by Skill")
-    print("4) Delete Fundi")
-    print("5) Create Job")
-    print("6) List Jobs")
-    print("7) Update Job Status")
-    print("8) View Jobs for a Fundi")
-    print("9) Match & Assign Job")
+    print("1) Create User")
+    print("2) List Users") 
+    print("3) Create Fundi Profile")
+    print("4) List Fundis")
+    print("5) Search Fundis")
+    print("6) Delete Fundi")
+    print("7) Create Job")
+    print("8) List Jobs")
+    print("9) Update Job Status")
+    print("10) View Job Details")
+    print("11) Assign Job to Fundi")
+    print("12) List Categories")
     print("S) Seed Sample Data")
     print("0) Exit")
     print("-" * 30)
@@ -61,14 +65,24 @@ def get_number(prompt):
             print("❌ Please enter a valid number (or 'q' to quit)")
 
 
-def handle_create_fundi():
-    """Handle creating a new fundi"""
-    print("\n➕ CREATE NEW FUNDI")
+def handle_create_user():
+    """Handle creating a new user"""
+    print("\n➕ CREATE NEW USER")
     print("-" * 30)
     
-    name = get_input("Enter fundi name: ")
-    if not name:
-        print("❌ Name cannot be empty")
+    username = get_input("Enter username: ")
+    if not username:
+        print("❌ Username cannot be empty")
+        return
+    
+    email = get_input("Enter email: ")
+    if not email:
+        print("❌ Email cannot be empty")
+        return
+    
+    password = get_input("Enter password: ")
+    if not password:
+        print("❌ Password cannot be empty")
         return
     
     phone = get_input("Enter phone number: ")
@@ -76,31 +90,117 @@ def handle_create_fundi():
         print("❌ Phone cannot be empty")
         return
     
-    skill = get_input("Enter skill (e.g., electrician, plumber): ")
-    if not skill:
-        print("❌ Skill cannot be empty")
+    print("\nAvailable roles:")
+    print("1) client")
+    print("2) fundi") 
+    print("3) admin")
+    
+    role_choice = get_input("Select role (1-3): ")
+    role_map = {"1": "client", "2": "fundi", "3": "admin"}
+    
+    if role_choice not in role_map:
+        print("❌ Invalid role choice")
         return
     
-    rating_input = get_input("Enter rating (0.0-5.0, press Enter for 0.0): ")
-    rating = 0.0
-    if rating_input:
-        try:
-            rating = float(rating_input)
-            if rating < 0.0 or rating > 5.0:
-                print("❌ Rating must be between 0.0 and 5.0")
-                return
-        except ValueError:
-            print("❌ Rating must be a number")
-            return
+    role = role_map[role_choice]
     
-    # Get database session and create fundi
+    # Get database session and create user
     session = get_session()
     try:
-        fundi = create_fundi(session, name, phone, skill, rating)
-        print(f"✅ Fundi created successfully!")
-        print(f"   ID: {fundi.id} | Name: {fundi.name} | Skill: {fundi.skill} | Rating: {fundi.rating}")
-    except ValueError as e:
+        user = create_user(session, username=username, email=email, password=password, phone=phone, role=role)
+        if user:
+            print(f"✅ User created successfully!")
+            print(f"   ID: {user.id} | Username: {user.username} | Role: {user.role}")
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+    finally:
+        session.close()
+
+
+def handle_list_users():
+    """Handle listing all users"""
+    print("\n👥 ALL USERS")
+    print("-" * 50)
+    
+    session = get_session()
+    try:
+        list_users(session)
+    except Exception as e:
         print(f"❌ Error: {e}")
+    finally:
+        session.close()
+
+
+def handle_create_fundi_profile():
+    """Handle creating a new fundi profile"""
+    print("\n➕ CREATE FUNDI PROFILE")
+    print("-" * 30)
+    
+    # First, show available users with fundi role
+    session = get_session()
+    try:
+        fundi_users = User.find_by_role(session, 'fundi')
+        if not fundi_users:
+            print("❌ No users with 'fundi' role found. Please create a fundi user first.")
+            return
+        
+        print("Available fundi users:")
+        for user in fundi_users:
+            print(f"ID: {user.id} | {user.username} | {user.email}")
+        
+        user_id = get_number("Enter user ID to create fundi profile: ")
+        if user_id is None:
+            return
+        
+        # Check if user exists and is a fundi
+        user = User.find_by_id(session, user_id)
+        if not user or user.role != 'fundi':
+            print("❌ User not found or not a fundi")
+            return
+        
+        specialization = get_input("Enter specialization (e.g., plumbing, electrical): ")
+        if not specialization:
+            print("❌ Specialization cannot be empty")
+            return
+        
+        experience = get_input("Enter experience (e.g., 5 years): ")
+        if not experience:
+            print("❌ Experience cannot be empty")
+            return
+        
+        hourly_rate_input = get_input("Enter hourly rate (KES): ")
+        if not hourly_rate_input:
+            print("❌ Hourly rate cannot be empty")
+            return
+        
+        try:
+            hourly_rate = float(hourly_rate_input)
+        except ValueError:
+            print("❌ Hourly rate must be a number")
+            return
+        
+        location = get_input("Enter location: ")
+        if not location:
+            print("❌ Location cannot be empty")
+            return
+        
+        bio = get_input("Enter bio (optional): ")
+        
+        # Create fundi profile
+        fundi = create_fundi_profile(
+            session, 
+            user_id=user_id,
+            specialization=specialization,
+            experience=experience,
+            hourly_rate=hourly_rate,
+            location=location,
+            bio=bio
+        )
+        
+        if fundi:
+            print(f"✅ Fundi profile created successfully!")
+            print(f"   ID: {fundi.id} | User: {user.username} | Specialization: {fundi.specialization}")
+            
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
     finally:
@@ -114,16 +214,7 @@ def handle_list_fundis():
     
     session = get_session()
     try:
-        fundis = list_fundis(session)
-        if not fundis:
-            print("📭 No fundis found in the database")
-            return
-        
-        for fundi in fundis:
-            print(f"ID: {fundi.id} | {fundi.name} | {fundi.skill} | Rating: {fundi.rating} | Phone: {fundi.phone}")
-        
-        print(f"\n📊 Total: {len(fundis)} fundis")
-        
+        list_fundis(session)
     except Exception as e:
         print(f"❌ Error: {e}")
     finally:
@@ -131,33 +222,22 @@ def handle_list_fundis():
 
 
 def handle_search_fundis():
-    """Handle searching fundis by skill"""
-    print("\n🔍 SEARCH FUNDIS BY SKILL")
+    """Handle searching fundis"""
+    print("\n🔍 SEARCH FUNDIS")
     print("-" * 30)
     
-    skill = get_input("Enter skill to search: ")
-    if not skill:
-        print("❌ Skill cannot be empty")
+    specialization = get_input("Enter specialization to search (or press Enter to skip): ")
+    location = get_input("Enter location to search (or press Enter to skip): ")
+    
+    if not specialization and not location:
+        print("❌ Please provide at least one search criteria")
         return
     
     session = get_session()
     try:
-        fundis = search_fundi_by_skill(session, skill)
-        if not fundis:
-            print(f"📭 No fundis found with skill '{skill}'")
-            return
-        
-        print(f"\n🔍 Results for skill '{skill}':")
-        print("-" * 50)
-        for fundi in fundis:
-            print(f"ID: {fundi.id} | {fundi.name} | {fundi.skill} | Rating: {fundi.rating}")
-        
-        print(f"\n📊 Found {len(fundis)} fundis")
-        
-    except ValueError as e:
-        print(f"❌ Error: {e}")
+        search_fundis(session, specialization=specialization, location=location)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"❌ Error: {e}")
     finally:
         session.close()
 
@@ -178,8 +258,6 @@ def handle_delete_fundi():
             print(f"✅ Fundi with ID {fundi_id} deleted successfully!")
         else:
             print(f"❌ Failed to delete fundi with ID {fundi_id}")
-    except ValueError as e:
-        print(f"❌ Error: {e}")
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
     finally:
@@ -191,23 +269,73 @@ def handle_create_job():
     print("\n➕ CREATE NEW JOB")
     print("-" * 30)
     
-    title = get_input("Enter job title: ")
-    if not title:
-        print("❌ Title cannot be empty")
-        return
-    
-    description = get_input("Enter job description: ")
-    if not description:
-        print("❌ Description cannot be empty")
-        return
-    
+    # Show available categories
     session = get_session()
     try:
-        job = create_job(session, title, description)
-        print(f"✅ Job created successfully!")
-        print(f"   ID: {job.id} | Title: {job.title} | Status: {job.status}")
-    except ValueError as e:
-        print(f"❌ Error: {e}")
+        categories = list_categories(session)
+        if not categories:
+            print("❌ No categories found. Please create categories first.")
+            return
+        
+        # Show available clients
+        clients = User.find_by_role(session, 'client')
+        if not clients:
+            print("❌ No clients found. Please create client users first.")
+            return
+        
+        print("Available clients:")
+        for client in clients:
+            print(f"ID: {client.id} | {client.username} | {client.email}")
+        
+        client_id = get_number("Enter client ID: ")
+        if client_id is None:
+            return
+        
+        # Check if client exists
+        client = User.find_by_id(session, client_id)
+        if not client or client.role != 'client':
+            print("❌ Client not found")
+            return
+        
+        title = get_input("Enter job title: ")
+        if not title:
+            print("❌ Title cannot be empty")
+            return
+        
+        description = get_input("Enter job description: ")
+        if not description:
+            print("❌ Description cannot be empty")
+            return
+        
+        location = get_input("Enter job location: ")
+        if not location:
+            print("❌ Location cannot be empty")
+            return
+        
+        category_id = get_number("Enter category ID: ")
+        if category_id is None:
+            return
+        
+        # Check if category exists
+        category = session.query(Category).filter(Category.id == category_id).first()
+        if not category:
+            print("❌ Category not found")
+            return
+        
+        # Create job
+        job = create_job(
+            session, 
+            title=title,
+            description=description,
+            location=location,
+            client_id=client_id,
+            category_id=category_id
+        )
+        
+        if job:
+            print(f"✅ Job created successfully!")
+            print(f"   ID: {job.id} | Title: {job.title} | Status: {job.status}")
+            
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
     finally:
@@ -221,17 +349,7 @@ def handle_list_jobs():
     
     session = get_session()
     try:
-        jobs = list_jobs(session)
-        if not jobs:
-            print("📭 No jobs found in the database")
-            return
-        
-        for job in jobs:
-            fundi_info = f" - Assigned to {job.fundi.name}" if job.fundi else " - Unassigned"
-            print(f"ID: {job.id} | {job.title} | Status: {job.status}{fundi_info}")
-        
-        print(f"\n📊 Total: {len(jobs)} jobs")
-        
+        list_jobs(session)
     except Exception as e:
         print(f"❌ Error: {e}")
     finally:
@@ -250,10 +368,12 @@ def handle_update_job_status():
     print("\nAvailable statuses:")
     print("1) pending")
     print("2) assigned") 
-    print("3) completed")
+    print("3) in_progress")
+    print("4) completed")
+    print("5) cancelled")
     
-    status_choice = get_input("Select status (1-3): ")
-    status_map = {"1": "pending", "2": "assigned", "3": "completed"}
+    status_choice = get_input("Select status (1-5): ")
+    status_map = {"1": "pending", "2": "assigned", "3": "in_progress", "4": "completed", "5": "cancelled"}
     
     if status_choice not in status_map:
         print("❌ Invalid status choice")
@@ -263,82 +383,89 @@ def handle_update_job_status():
     
     session = get_session()
     try:
-        job = update_job_status(session, job_id, status)
-        print(f"✅ Job status updated successfully!")
-        print(f"   ID: {job.id} | Title: {job.title} | New Status: {job.status}")
-    except ValueError as e:
-        print(f"❌ Error: {e}")
+        success = update_job_status(session, job_id, status)
+        if success:
+            print(f"✅ Job status updated successfully!")
+        else:
+            print(f"❌ Failed to update job status")
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
     finally:
         session.close()
 
 
-def handle_view_fundi_jobs():
-    """Handle viewing jobs for a specific fundi"""
-    print("\n📋 VIEW FUNDI JOBS")
+def handle_view_job_details():
+    """Handle viewing job details"""
+    print("\n📋 VIEW JOB DETAILS")
     print("-" * 30)
     
-    fundi_id = get_number("Enter fundi ID (or 'q' to quit): ")
-    if fundi_id is None:
+    job_id = get_number("Enter job ID (or 'q' to quit): ")
+    if job_id is None:
         return
     
     session = get_session()
     try:
-        jobs = view_jobs_for_fundi(session, fundi_id)
-        if not jobs:
-            print(f"📭 No jobs found for fundi ID {fundi_id}")
-            return
-        
-        print(f"\n📋 Jobs for fundi ID {fundi_id}:")
-        print("-" * 50)
-        for job in jobs:
-            print(f"ID: {job.id} | {job.title} | Status: {job.status}")
-        
-        print(f"\n📊 Total: {len(jobs)} jobs")
-        
-    except ValueError as e:
-        print(f"❌ Error: {e}")
+        view_job_details(session, job_id)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"❌ Error: {e}")
     finally:
         session.close()
 
 
-def handle_match_job():
-    """Handle matching and assigning a job"""
-    print("\n🔗 MATCH & ASSIGN JOB")
+def handle_assign_job():
+    """Handle assigning a job to a fundi"""
+    print("\n🔗 ASSIGN JOB TO FUNDI")
     print("-" * 30)
     
     # Show pending jobs first
     session = get_session()
     try:
-        pending_jobs = get_pending_jobs(session)
+        pending_jobs = list_jobs_by_status(session, "pending")
         if not pending_jobs:
             print("📭 No pending jobs available for assignment")
             return
         
-        print("Available pending jobs:")
-        for job in pending_jobs:
-            print(f"ID: {job.id} | {job.title}")
+        # Show available fundis
+        available_fundis = Fundi.find_available(session)
+        if not available_fundis:
+            print("📭 No available fundis found")
+            return
         
-        job_id = get_number("\nEnter job ID to assign (or 'q' to quit): ")
+        print("Available fundis:")
+        for fundi in available_fundis:
+            print(f"ID: {fundi.id} | {fundi.user.username} | {fundi.specialization}")
+        
+        job_id = get_number("Enter job ID to assign: ")
         if job_id is None:
             return
         
-        # Try to match and assign
-        success, message, assigned_fundi = match_and_assign_job(session, job_id)
+        fundi_id = get_number("Enter fundi ID to assign to: ")
+        if fundi_id is None:
+            return
+        
+        # Try to assign job
+        success = assign_job_to_fundi(session, job_id, fundi_id)
         if success:
-            print(f"✅ {message}")
-            if assigned_fundi:
-                print(f"   Fundi: {assigned_fundi.name} | Skill: {assigned_fundi.skill} | Rating: {assigned_fundi.rating}")
+            print(f"✅ Job assigned successfully!")
         else:
-            print(f"❌ {message}")
+            print(f"❌ Failed to assign job")
             
-    except ValueError as e:
-        print(f"❌ Error: {e}")
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+    finally:
+        session.close()
+
+
+def handle_list_categories():
+    """Handle listing categories"""
+    print("\n📂 JOB CATEGORIES")
+    print("-" * 30)
+    
+    session = get_session()
+    try:
+        list_categories(session)
+    except Exception as e:
+        print(f"❌ Error: {e}")
     finally:
         session.close()
 
@@ -355,8 +482,7 @@ def handle_seed_data():
     
     session = get_session()
     try:
-        result = seed_sample_data(session)
-        print(f"✅ {result}")
+        seed_sample_data(session)
     except Exception as e:
         print(f"❌ Error seeding data: {e}")
     finally:
@@ -369,34 +495,40 @@ def main():
     
     while True:
         print_menu()
-        choice = get_input("Select option (0-9, S): ").upper()
+        choice = get_input("Select option (0-12, S): ").upper()
         
         if choice == "0":
             print("\n👋 Thank you for using FundiMatch CLI!")
             print("   Goodbye!")
             break
         elif choice == "1":
-            handle_create_fundi()
+            handle_create_user()
         elif choice == "2":
-            handle_list_fundis()
+            handle_list_users()
         elif choice == "3":
-            handle_search_fundis()
+            handle_create_fundi_profile()
         elif choice == "4":
-            handle_delete_fundi()
+            handle_list_fundis()
         elif choice == "5":
-            handle_create_job()
+            handle_search_fundis()
         elif choice == "6":
-            handle_list_jobs()
+            handle_delete_fundi()
         elif choice == "7":
-            handle_update_job_status()
+            handle_create_job()
         elif choice == "8":
-            handle_view_fundi_jobs()
+            handle_list_jobs()
         elif choice == "9":
-            handle_match_job()
+            handle_update_job_status()
+        elif choice == "10":
+            handle_view_job_details()
+        elif choice == "11":
+            handle_assign_job()
+        elif choice == "12":
+            handle_list_categories()
         elif choice == "S":
             handle_seed_data()
         else:
-            print("❌ Invalid option. Please select 0-9 or S")
+            print("❌ Invalid option. Please select 0-12 or S")
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Initialize extensions
 db = SQLAlchemy(app)
-CORS(app)  # Enable CORS for React frontend
+CORS(app, origins=['http://localhost:5173', 'http://localhost:3000'])  # Enable CORS for React frontend
 
 # Import models (same as CLI)
 # We need to redefine the models for Flask-SQLAlchemy
@@ -132,6 +132,90 @@ class Payment(db.Model):
     client = db.relationship("User", foreign_keys=[client_id])
     fundi = db.relationship("Fundi")
 
+# Notification model
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # fundi_registered, job_created, job_assigned, status_changed
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    user = db.relationship("User")
+
+# Notification helpers
+def notify_admins_of_new_fundi(new_fundi):
+    admins = User.query.filter_by(role='admin', is_active=True).all()
+    for admin in admins:
+        n = Notification(
+            user_id=admin.id,
+            title="New Fundi Registration",
+            message=f"New fundi {new_fundi.user.username} ({new_fundi.specialization}) in {new_fundi.location}",
+            type="fundi_registered"
+        )
+        db.session.add(n)
+    db.session.commit()
+
+def notify_clients_of_new_fundi(new_fundi):
+    clients = User.query.filter_by(role='client', is_active=True).all()
+    for client in clients:
+        n = Notification(
+            user_id=client.id,
+            title="New Fundi Available",
+            message=f"{new_fundi.specialization} fundi available in {new_fundi.location}",
+            type="fundi_available"
+        )
+        db.session.add(n)
+    db.session.commit()
+
+def notify_on_job_created(job):
+    admins = User.query.filter_by(role='admin', is_active=True).all()
+    for admin in admins:
+        n = Notification(
+            user_id=admin.id,
+            title="New Job Created",
+            message=f"Job '{job.title}' created by client #{job.client_id}",
+            type="job_created"
+        )
+        db.session.add(n)
+    db.session.commit()
+
+def notify_on_job_assigned(job):
+    targets = []
+    if job.fundi_id:
+        fundi = Fundi.query.get(job.fundi_id)
+        if fundi:
+            targets.append(fundi.user_id)
+    targets.append(job.client_id)
+    for uid in targets:
+        n = Notification(
+            user_id=uid,
+            title="Job Assigned",
+            message=f"Job '{job.title}' assigned to fundi #{job.fundi_id}",
+            type="job_assigned"
+        )
+        db.session.add(n)
+    db.session.commit()
+
+def notify_on_status_change(job):
+    targets = [job.client_id]
+    if job.fundi_id:
+        fundi = Fundi.query.get(job.fundi_id)
+        if fundi:
+            targets.append(fundi.user_id)
+    for uid in targets:
+        n = Notification(
+            user_id=uid,
+            title="Job Status Updated",
+            message=f"Job '{job.title}' is now {job.status}",
+            type="status_changed"
+        )
+        db.session.add(n)
+    db.session.commit()
+
 # API Routes
 # ==========
 
@@ -139,7 +223,11 @@ class Payment(db.Model):
 def get_users():
     """Get all users"""
     try:
-        users = User.query.all()
+        role = request.args.get('role')
+        q = User.query
+        if role:
+            q = q.filter_by(role=role)
+        users = q.all()
         return jsonify([{
             'id': user.id,
             'username': user.username,
@@ -194,9 +282,22 @@ def create_user():
 def get_fundis():
     """Get all fundis"""
     try:
-        fundis = Fundi.query.all()
+        is_available = request.args.get('is_available')
+        specialization = request.args.get('specialization')
+        location = request.args.get('location')
+
+        q = Fundi.query
+        if is_available is not None:
+            q = q.filter(Fundi.is_available == (is_available.lower() == 'true'))
+        if specialization:
+            q = q.filter(Fundi.specialization.ilike(f"%{specialization}%"))
+        if location:
+            q = q.filter(Fundi.location.ilike(f"%{location}%"))
+
+        fundis = q.all()
         return jsonify([{
             'id': fundi.id,
+            'user_id': fundi.user_id,
             'username': fundi.user.username,
             'email': fundi.user.email,
             'phone': fundi.user.phone,
@@ -251,6 +352,10 @@ def create_fundi():
         
         db.session.add(new_fundi)
         db.session.commit()
+
+        # Trigger notifications
+        notify_admins_of_new_fundi(new_fundi)
+        notify_clients_of_new_fundi(new_fundi)
         
         return jsonify({
             'id': new_fundi.id,
@@ -276,7 +381,19 @@ def create_fundi():
 def get_bookings():
     """Get all bookings/jobs"""
     try:
-        jobs = Job.query.all()
+        client_id = request.args.get('client_id', type=int)
+        fundi_id = request.args.get('fundi_id', type=int)
+        status = request.args.get('status')
+
+        q = Job.query
+        if client_id:
+            q = q.filter(Job.client_id == client_id)
+        if fundi_id:
+            q = q.filter(Job.fundi_id == fundi_id)
+        if status:
+            q = q.filter(Job.status == status)
+
+        jobs = q.all()
         return jsonify([{
             'id': job.id,
             'description': job.title,
@@ -317,7 +434,10 @@ def create_booking():
         
         db.session.add(new_job)
         db.session.commit()
-        
+
+        # Notify admins on job creation
+        notify_on_job_created(new_job)
+
         return jsonify({
             'id': new_job.id,
             'description': new_job.title,
@@ -336,6 +456,21 @@ def create_booking():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/bookings/<int:job_id>/assign', methods=['PUT'])
+def assign_booking(job_id):
+    """Assign a job to a fundi"""
+    try:
+        data = request.get_json()
+        fundi_id = data.get('fundi_id')
+        job = Job.query.get_or_404(job_id)
+        job.fundi_id = fundi_id
+        job.status = 'assigned'
+        db.session.commit()
+        notify_on_job_assigned(job)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
     """Get all categories"""
@@ -347,6 +482,90 @@ def get_categories():
             'description': category.description,
             'icon': category.icon
         } for category in categories])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/bookings/<int:job_id>/status', methods=['PUT'])
+def update_booking_status(job_id):
+    """Update job status"""
+    try:
+        data = request.get_json()
+        status = data.get('status')
+        job = Job.query.get_or_404(job_id)
+        job.status = status
+        if status == 'completed':
+            job.completed_at = datetime.utcnow()
+        db.session.commit()
+        notify_on_status_change(job)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/<int:user_id>', methods=['GET'])
+def get_user_notifications(user_id):
+    """Get unread notifications for a user"""
+    try:
+        notifs = Notification.query.filter_by(user_id=user_id, is_read=False).order_by(Notification.created_at.desc()).all()
+        return jsonify([{
+            'id': n.id,
+            'title': n.title,
+            'message': n.message,
+            'type': n.type,
+            'is_read': n.is_read,
+            'created_at': n.created_at.isoformat()
+        } for n in notifs])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/<int:notif_id>/read', methods=['PUT'])
+def mark_notification_as_read(notif_id):
+    try:
+        n = Notification.query.get_or_404(notif_id)
+        n.is_read = True
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard/<role>/<int:user_id>', methods=['GET'])
+def get_dashboard_data(role, user_id):
+    """Role-based dashboard datasets"""
+    try:
+        if role == 'admin':
+            totals = {
+                'clients': User.query.filter_by(role='client').count(),
+                'fundis': User.query.filter_by(role='fundi').count(),
+                'admins': User.query.filter_by(role='admin').count(),
+                'jobs_pending': Job.query.filter_by(status='pending').count(),
+                'jobs_assigned': Job.query.filter_by(status='assigned').count(),
+                'jobs_completed': Job.query.filter_by(status='completed').count()
+            }
+            latest_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+            latest_jobs = Job.query.order_by(Job.created_at.desc()).limit(5).all()
+            return jsonify({
+                'totals': totals,
+                'latest_users': [{'id': u.id, 'username': u.username, 'role': u.role} for u in latest_users],
+                'latest_jobs': [{'id': j.id, 'title': j.title, 'status': j.status} for j in latest_jobs]
+            })
+        elif role == 'client':
+            available_fundis = Fundi.query.filter_by(is_available=True).order_by(Fundi.rating.desc()).limit(10).all()
+            my_jobs = Job.query.filter_by(client_id=user_id).order_by(Job.created_at.desc()).limit(10).all()
+            return jsonify({
+                'available_fundis': [{'id': f.id, 'username': f.user.username, 'specialization': f.specialization, 'location': f.location, 'rating': f.rating} for f in available_fundis],
+                'my_jobs': [{'id': j.id, 'title': j.title, 'status': j.status} for j in my_jobs]
+            })
+        elif role == 'fundi':
+            my_profile = Fundi.query.filter_by(user_id=user_id).first()
+            my_jobs = Job.query.filter_by(fundi_id=my_profile.id).order_by(Job.created_at.desc()).limit(10).all() if my_profile else []
+            matching_jobs = Job.query.filter_by(status='pending').all()
+            if my_profile:
+                matching_jobs = [j for j in matching_jobs if (my_profile.location.lower() in j.location.lower())]
+            return jsonify({
+                'my_jobs': [{'id': j.id, 'title': j.title, 'status': j.status} for j in my_jobs],
+                'matching_jobs': [{'id': j.id, 'title': j.title, 'status': j.status, 'location': j.location} for j in matching_jobs[:10]]
+            })
+        else:
+            return jsonify({'error': 'Invalid role'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

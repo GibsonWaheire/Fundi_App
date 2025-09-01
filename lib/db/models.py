@@ -99,6 +99,11 @@ class User(Base):
         """Find all users with specific role"""
         return session.query(cls).filter(cls.role == role).all()
 
+    @classmethod
+    def find_by_id(cls, session, user_id):
+        """Find user by ID"""
+        return session.query(cls).filter(cls.id == user_id).first()
+
 
 class Fundi(Base):
     """
@@ -303,6 +308,11 @@ class Job(Base):
             self.completed_at = func.now()
         session.commit()
         return self
+
+    @classmethod
+    def find_by_id(cls, session, job_id):
+        """Find job by ID"""
+        return session.query(cls).filter(cls.id == job_id).first()
 
 
 class Review(Base):

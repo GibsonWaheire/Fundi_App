@@ -45,7 +45,9 @@ export const getApiConfig = () => {
 // Helper function to build API URLs
 export const buildApiUrl = (endpoint) => {
   const config = getApiConfig();
-  return `${config.baseURL}${config.endpoints[endpoint] || endpoint}`;
+  const envBase = import.meta.env.VITE_API_BASE;
+  const base = envBase || config.baseURL;
+  return `${base}${config.endpoints[endpoint] || endpoint}`;
 };
 
 // Export current environment for debugging

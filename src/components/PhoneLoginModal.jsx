@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { firebaseAuthService } from '../services/firebaseAuthService'
 
 export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPayment = false }) {
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -51,6 +52,38 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
       }
     } catch (err) {
       setError('Failed to verify phone number. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError('')
+    setIsLoading(true)
+    try {
+      const { user } = await firebaseAuthService.signInWithGoogle()
+      const userData = {
+        id: user.uid,
+        username: user.displayName || user.email,
+        email: user.email,
+        phone: user.phoneNumber || '',
+        role: 'client',
+        is_active: true
+      }
+      
+      // Login the user
+      login(userData)
+      
+      // If this is for fundi discovery, show payment modal
+      if (showPayment) {
+        onSuccess(userData)
+      } else {
+        onClose()
+        navigate('/dashboard')
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Google sign-in failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -138,6 +171,26 @@ export default function PhoneLoginModal({ isOpen, onClose, onSuccess, showPaymen
               )}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-in */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="text-2xl mr-3">🟦</span>
+            <span className="text-lg font-medium text-gray-700">Continue with Google</span>
+          </button>
 
           <div className="mt-8 text-center">
             <button

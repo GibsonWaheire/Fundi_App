@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
+import { firebaseAuthService } from '../services/firebaseAuthService'
 import { validateRegistrationForm, sanitizeInput } from '../utils/validation'
 
 const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
@@ -103,6 +104,47 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true)
+    setErrors({})
+    try {
+      const { user } = await firebaseAuthService.signInWithGoogle()
+      
+      // If user is registering as fundi, we need to collect additional info first
+      if (formData.userType === 'fundi') {
+        // For Google sign-up as fundi, we'll pre-fill the form with Google data
+        // but still require them to complete the fundi-specific fields
+        setFormData(prev => ({
+          ...prev,
+          name: user.displayName || prev.name,
+          email: user.email,
+          phone: user.phoneNumber || prev.phone
+        }))
+        setErrors({ general: ['Please complete your fundi profile below to continue with Google sign-up.'] })
+        setIsLoading(false)
+        return
+      }
+      
+      // For clients, proceed with immediate registration
+      const userData = {
+        id: user.uid,
+        username: user.displayName || user.email,
+        email: user.email,
+        phone: user.phoneNumber || '',
+        role: 'client',
+        is_active: true
+      }
+      login(userData)
+      onClose()
+      navigate('/dashboard')
+    } catch (e) {
+      console.error(e)
+      setErrors({ general: ['Google sign-up failed. Please try again.'] })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (!isOpen) return null
@@ -464,9 +506,11 @@ const RegisterModal = ({ isOpen, onClose, allowFundis = false }) => {
             <button
               type="button"
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+              onClick={handleGoogleSignUp}
+              disabled={isLoading}
             >
-              <span className="text-2xl mr-2">📱</span>
-              <span className="text-sm font-medium text-gray-700">SMS</span>
+              <span className="text-2xl mr-2">🟦</span>
+              <span className="text-sm font-medium text-gray-700">Google</span>
             </button>
             <button
               type="button"

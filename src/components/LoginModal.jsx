@@ -71,14 +71,30 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
     setError('')
     try {
       const { user } = await firebaseAuthService.signInWithGoogle()
-      const userData = {
-        id: user.uid,
-        username: user.displayName || user.email,
-        email: user.email,
-        phone: user.phoneNumber || '',
-        role: 'client',
-        is_active: true
+      
+      // Check if this user exists in our backend and get their role
+      const existingUser = await authService.getUserByEmail(user.email)
+      let userData
+      
+      if (existingUser) {
+        // User exists, check role compatibility
+        if (!allowFundis && existingUser.role === 'fundi') {
+          setError('Fundis should sign in through the Fundi portal. Please visit /fundi to sign in.')
+          return
+        }
+        userData = existingUser
+      } else {
+        // New user, assign role based on context
+        userData = {
+          id: user.uid,
+          username: user.displayName || user.email,
+          email: user.email,
+          phone: user.phoneNumber || '',
+          role: allowFundis ? 'fundi' : 'client',
+          is_active: true
+        }
       }
+      
       login(userData)
       onClose()
       navigate('/dashboard')

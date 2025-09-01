@@ -29,13 +29,27 @@ from google.oauth2 import id_token
 app = Flask(__name__)
 
 # Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fundimatch.db')
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///fundimatch.db')
+# Fix for Render's PostgreSQL URL format
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Initialize extensions
 db = SQLAlchemy(app)
-CORS(app, origins=['http://localhost:5173', 'http://localhost:3000'])  # Enable CORS for React frontend
+
+# CORS configuration for production and development
+allowed_origins = [
+    'http://localhost:5173', 
+    'http://localhost:3000',
+    'https://fundimatch-frontend.onrender.com',  # Your production frontend URL
+    'https://fundiapp-ef642.web.app',  # If you use Firebase hosting
+    'https://fundiapp-ef642.firebaseapp.com'
+]
+CORS(app, origins=allowed_origins)
 
 # Import models (same as CLI)
 # We need to redefine the models for Flask-SQLAlchemy

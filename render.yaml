@@ -1,32 +1,63 @@
-# Render Deployment Configuration for FundiMatch Flask Backend
-# ===========================================================
+# Render Deployment Configuration for FundiMatch
+# ==============================================
 
 services:
+  # PostgreSQL Database
+  - type: pserv
+    name: fundimatch-db
+    databaseName: fundimatch
+    user: fundimatch_user
+    plan: free
+
   # Flask Backend API
   - type: web
     name: fundimatch-api
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn flask_backend_template:app
+    startCommand: gunicorn flask_backend_template:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: DATABASE_URL
-        value: postgresql://postgres:password@localhost:5432/fundimatch
+        fromDatabase:
+          name: fundimatch-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: FLASK_ENV
         value: production
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # You'll need to set this manually in Render dashboard
     healthCheckPath: /api/health
     autoDeploy: true
 
-  # PostgreSQL Database (if using Render's managed database)
-  - type: pserv
-    name: fundimatch-db
-    env: python
+  # React Frontend (Static Site)
+  - type: web
+    name: fundimatch-frontend
+    env: static
     plan: free
-    disk:
-      name: fundimatch-data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 1
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_BASE
+        value: https://fundimatch-api.onrender.com/api
+      - key: VITE_FIREBASE_API_KEY
+        sync: false  # You'll set this manually
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        value: fundiapp-ef642.firebaseapp.com
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: fundiapp-ef642
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        value: fundiapp-ef642.firebasestorage.app
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        value: 548669525664
+      - key: VITE_FIREBASE_APP_ID
+        value: 1:548669525664:web:640a6e327cb5de8bfcc3c5
+      - key: VITE_FIREBASE_MEASUREMENT_ID
+        value: G-ZR9J626B0D
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

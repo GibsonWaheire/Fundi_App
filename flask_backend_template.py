@@ -764,10 +764,11 @@ def google_auth():
         
         # Verify the Google ID token
         try:
-            # Specify the CLIENT_ID of your app that accesses the backend
-            # For now, we'll skip client ID verification in development
-            # In production, set GOOGLE_CLIENT_ID environment variable
+            # SECURITY: Get Google Client ID from environment
             client_id = os.environ.get('GOOGLE_CLIENT_ID')
+            if not client_id:
+                return jsonify({'error': 'Google Client ID not configured'}), 500
+            
             idinfo = id_token.verify_oauth2_token(
                 id_token_str, 
                 google_requests.Request(), 
@@ -845,5 +846,5 @@ if __name__ == '__main__':
     # Run the app
     port = int(os.environ.get('PORT', 5000))
     # SECURITY: Disable debug mode in production
-debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
-app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

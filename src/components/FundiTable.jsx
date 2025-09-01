@@ -103,7 +103,7 @@ const FundiTable = () => {
     } else {
       // Fundi is locked - start payment flow
       if (!currentUser) {
-        setIsPhoneModalOpen(true)
+      setIsPhoneModalOpen(true)
       } else {
         setIsPaymentModalOpen(true)
       }
@@ -128,17 +128,10 @@ const FundiTable = () => {
       
       // FORCE CONTACT VIEW - User cannot escape this
       setForceContactView(true)
-      setShowContactModal(true)
+    setShowContactModal(true)
       
       // Show success message
       alert(`🎉 Success! ${selectedFundi.name} is now unlocked! You will now see the contact details.`)
-    }
-  }
-
-  const handleContactClick = (fundi) => {
-    if (isUnlocked(fundi.id)) {
-      setSelectedFundi(fundi)
-      setShowContactModal(true)
     }
   }
 
@@ -276,6 +269,34 @@ const FundiTable = () => {
           </div>
         </div>
 
+        {/* How It Works */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">�� How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                💳
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Pay KSh 50</h3>
+              <p className="text-gray-600 text-sm">Per fundi to unlock their contact details</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                📞
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Get Contact Details</h3>
+              <p className="text-gray-600 text-sm">Phone number and email address</p>
+                </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                🔒
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Others Remain Locked</h3>
+              <p className="text-gray-600 text-sm">Pay separately for each fundi</p>
+            </div>
+          </div>
+        </div>
+
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -315,12 +336,12 @@ const FundiTable = () => {
 
         {/* Results Summary */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center justify-between">
+              <div>
               <h3 className="text-xl font-semibold text-gray-900">
-                Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
-              </h3>
-              <p className="text-gray-600">Ready to help with your project</p>
+                  Found <span className="text-blue-600">{filteredAndSortedFundis.length}</span> fundis
+                </h3>
+                <p className="text-gray-600">Ready to help with your project</p>
               <div className="mt-2 flex items-center space-x-4 text-sm">
                 <span className="flex items-center">
                   <span className="text-blue-600 mr-1">🔓</span>
@@ -335,9 +356,9 @@ const FundiTable = () => {
                   </span>
                 </span>
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{filteredAndSortedFundis.length}</div>
               <div className="text-sm text-gray-500">Total Fundis</div>
             </div>
           </div>
@@ -415,7 +436,7 @@ const FundiTable = () => {
                         <div className="space-y-2">
                           <div 
                             className="text-sm text-gray-600 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                            onClick={() => handleContactClick(fundi)}
+                            onClick={() => handleViewContact(fundi)}
                           >
                             <div className="flex items-center justify-center space-x-2">
                               <span>📞</span>
@@ -431,9 +452,9 @@ const FundiTable = () => {
                           </div>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleViewContact(fundi)}
-                          disabled={!fundi.available}
+                      <button
+                        onClick={() => handleViewContact(fundi)}
+                        disabled={!fundi.available}
                           className="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <span className="flex items-center">
@@ -441,7 +462,7 @@ const FundiTable = () => {
                             Pay KSh 50
                           </span>
                         </button>
-                      )}
+                        )}
                     </td>
                   </tr>
                 ))}
@@ -454,80 +475,80 @@ const FundiTable = () => {
         {showContactModal && selectedFundi && !forceContactView && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden">
-              {/* Header */}
+            {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-                    {selectedFundi.avatar}
+              <div className="text-center">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                  {selectedFundi.avatar}
+                </div>
+                <h3 className="text-3xl font-bold mb-2">{selectedFundi.name}</h3>
+                <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
+                <div className="flex items-center justify-center mt-4">
+                  <span className="text-yellow-300 text-lg mr-2">⭐</span>
+                  <span className="font-semibold">{selectedFundi.rating}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              {/* Contact Details */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📞</span>
+                    <span className="text-gray-600">Phone</span>
                   </div>
-                  <h3 className="text-3xl font-bold mb-2">{selectedFundi.name}</h3>
-                  <p className="text-blue-100 text-lg">{selectedFundi.service}</p>
-                  <div className="flex items-center justify-center mt-4">
-                    <span className="text-yellow-300 text-lg mr-2">⭐</span>
-                    <span className="font-semibold">{selectedFundi.rating}</span>
+                  <span className="font-semibold text-gray-900">{selectedFundi.phone}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📧</span>
+                    <span className="text-gray-600">Email</span>
                   </div>
+                  <span className="font-semibold text-gray-900">{selectedFundi.email}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📍</span>
+                    <span className="text-gray-600">Location</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">{selectedFundi.location}</span>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">💰</span>
+                    <span className="text-gray-600">Rate</span>
+                  </div>
+                  <span className="font-semibold text-green-600">KSh {selectedFundi.hourlyRate}/hr</span>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-8">
-                {/* Contact Details */}
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">📞</span>
-                      <span className="text-gray-600">Phone</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{selectedFundi.phone}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">📧</span>
-                      <span className="text-gray-600">Email</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{selectedFundi.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">📍</span>
-                      <span className="text-gray-600">Location</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{selectedFundi.location}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">💰</span>
-                      <span className="text-gray-600">Rate</span>
-                    </div>
-                    <span className="font-semibold text-green-600">KSh {selectedFundi.hourlyRate}/hr</span>
-                  </div>
-                </div>
-
-                {/* Success Message */}
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+              {/* Success Message */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-center mb-2">
                     <span className="text-2xl mr-2">🔓</span>
                     <p className="text-green-800 text-sm font-semibold">
                       <strong>Contact Unlocked!</strong>
                     </p>
                   </div>
-                  <p className="text-green-800 text-sm text-center">
+                <p className="text-green-800 text-sm text-center">
                     ✅ You can now contact this fundi directly.
                   </p>
                   <div className="text-green-700 text-xs text-center mt-2 space-y-1">
                     <p>💡 Other fundis remain locked. Pay KSh 50 each to unlock their contact details.</p>
                     <p>🎯 <strong>This specific fundi ({selectedFundi.name}) is unlocked for you!</strong></p>
                   </div>
-                </div>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => setShowContactModal(false)}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
-                  >
-                    Close
-                  </button>
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                >
+                  Close
+                </button>
                   <button
                     onClick={() => {
                       setShowContactModal(false)
@@ -539,26 +560,26 @@ const FundiTable = () => {
                     Sign Up Free
                   </button>
                 </div>
-              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modals */}
-        <PhoneLoginModal
-          isOpen={isPhoneModalOpen}
-          onClose={() => setIsPhoneModalOpen(false)}
-          onSuccess={handlePhoneSuccess}
-          showPayment={true}
-        />
+      {/* Modals */}
+      <PhoneLoginModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        onSuccess={handlePhoneSuccess}
+        showPayment={true}
+      />
 
-        <MpesaPaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => setIsPaymentModalOpen(false)}
-          onSuccess={handlePaymentSuccess}
-          fundi={selectedFundi}
+      <MpesaPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        fundi={selectedFundi}
           phoneNumber={currentUser?.phone}
-        />
+      />
       </div>
     </div>
   )

@@ -447,6 +447,31 @@ NODE_ENV=development
 
 ---
 
+## 📚 Documentation
+
+For detailed documentation, guides, and technical references, visit the **[docs/](docs/)** directory:
+
+### 📖 **Quick Links:**
+- **[Complete Documentation Index](docs/README.md)** - All documentation in one place
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- **[Database Setup](docs/DATABASE_SETUP.md)** - Database configuration guide
+- **[CLI Documentation](docs/CLI_README.md)** - Command-line interface guide
+- **[Security Documentation](docs/SECURITY.md)** - Security policies and best practices
+- **[Flask Backend Guide](docs/FLASK_BACKEND_README.md)** - API documentation
+
+### 🔍 **Documentation Structure:**
+```
+docs/
+├── 🚀 Getting Started Guides
+├── 🌐 Deployment & Production
+├── 🔒 Security Documentation  
+└── 🔧 Development & Maintenance
+```
+
+**💡 Tip**: Start with the [Documentation Index](docs/README.md) for easy navigation to all guides and references.
+
+---
+
 ## 👨‍💻 Author Information
 
 **Name**: Gibson Waheire  

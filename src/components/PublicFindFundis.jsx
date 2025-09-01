@@ -139,13 +139,6 @@ const PublicFindFundis = () => {
     }
   }
 
-  const handleContactClick = (fundi) => {
-    if (isUnlocked(fundi.id)) {
-      setSelectedFundi(fundi)
-    setShowContactModal(true)
-    }
-  }
-
   // Filter fundis
   const filteredAndSortedFundis = transformedFundis
     .filter(fundi => {
@@ -299,19 +292,31 @@ const PublicFindFundis = () => {
             Connect with verified professionals in your area. Pay KSh 50 per fundi to unlock their contact details and get started on your project.
           </p>
           
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{fundis.length}</div>
-              <div className="text-gray-600">Verified Fundis</div>
-                  </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-green-600 mb-2">50</div>
-              <div className="text-gray-600">KSh per Fundi</div>
+          {/* How It Works */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">💡 How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  💳
                 </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-              <div className="text-gray-600">Available</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Pay KSh 50</h3>
+                <p className="text-gray-600 text-sm">Per fundi to unlock their contact details</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  📞
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Get Contact Details</h3>
+                <p className="text-gray-600 text-sm">Phone number and email address</p>
+                  </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  🔒
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Others Remain Locked</h3>
+                <p className="text-gray-600 text-sm">Pay separately for each fundi</p>
+              </div>
             </div>
           </div>
         </div>
@@ -440,7 +445,7 @@ const PublicFindFundis = () => {
                     <div className="space-y-3">
                       <div 
                         className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                        onClick={() => handleContactClick(fundi)}
+                        onClick={() => handleViewContact(fundi)}
                       >
                         <div className="text-sm text-gray-700 space-y-2">
                           <div className="flex items-center justify-between">

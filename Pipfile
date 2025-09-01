@@ -11,6 +11,8 @@ flask-cors = "*"
 gunicorn = "*"
 google-auth = "*"
 requests = "*"
+flask-limiter = "*"
+marshmallow = "*"
 
 [requires]
 python_version = "3.11"

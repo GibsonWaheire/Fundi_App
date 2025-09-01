@@ -43,7 +43,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # SECURITY: Must set SECRET_KEY environment variable in production
 secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
-    if app.config['ENV'] == 'production':
+    if os.environ.get('FLASK_ENV') == 'production':
         raise ValueError("SECRET_KEY environment variable must be set in production")
     else:
         secret_key = 'dev-secret-key-change-in-production'
@@ -52,7 +52,11 @@ app.config['SECRET_KEY'] = secret_key
 # Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-limiter = Limiter(app, key_func=get_remote_address)
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 # SECURITY: Add security headers
 @app.after_request

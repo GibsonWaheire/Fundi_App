@@ -44,19 +44,19 @@ services:
       - key: VITE_API_BASE
         value: https://fundimatch-api.onrender.com/api
       - key: VITE_FIREBASE_API_KEY
-        sync: false  # You'll set this manually
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_AUTH_DOMAIN
-        value: fundiapp-ef642.firebaseapp.com
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_PROJECT_ID
-        value: fundiapp-ef642
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_STORAGE_BUCKET
-        value: fundiapp-ef642.firebasestorage.app
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_MESSAGING_SENDER_ID
-        value: 548669525664
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_APP_ID
-        value: 1:548669525664:web:640a6e327cb5de8bfcc3c5
+        sync: false  # SECURITY: Set manually in Render dashboard
       - key: VITE_FIREBASE_MEASUREMENT_ID
-        value: G-ZR9J626B0D
+        sync: false  # SECURITY: Set manually in Render dashboard
     routes:
       - type: rewrite
         source: /*

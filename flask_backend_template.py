@@ -46,8 +46,8 @@ allowed_origins = [
     'http://localhost:5173', 
     'http://localhost:3000',
     'https://fundimatch-frontend.onrender.com',  # Your production frontend URL
-    'https://fundiapp-ef642.web.app',  # If you use Firebase hosting
-    'https://fundiapp-ef642.firebaseapp.com'
+    'https://YOUR_PROJECT_ID.web.app',  # If you use Firebase hosting
+    'https://YOUR_PROJECT_ID.firebaseapp.com'
 ]
 CORS(app, origins=allowed_origins)
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authService } from '../services/authService'
+import { firebaseAuthService } from '../services/firebaseAuthService'
 
 const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
   const [formData, setFormData] = useState({
@@ -49,6 +50,44 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleForgotPassword = async () => {
+    setError('')
+    if (!formData.email) {
+      setError('Enter your email above, then click Forgot password.')
+      return
+    }
+    try {
+      await firebaseAuthService.sendResetEmail(formData.email)
+      setError('Password reset email sent. Check your inbox.')
+    } catch (e) {
+      setError('Failed to send reset email. Verify your email.')
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const { user } = await firebaseAuthService.signInWithGoogle()
+      const userData = {
+        id: user.uid,
+        username: user.displayName || user.email,
+        email: user.email,
+        phone: user.phoneNumber || '',
+        role: 'client',
+        is_active: true
+      }
+      login(userData)
+      onClose()
+      navigate('/dashboard')
+    } catch (e) {
+      console.error(e)
+      setError('Google sign-in failed.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (!isOpen) return null
@@ -130,7 +169,7 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
                 <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
-              <button type="button" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button type="button" className="text-sm text-blue-600 hover:text-blue-700 font-medium" onClick={handleForgotPassword}>
                 Forgot password?
               </button>
             </div>
@@ -166,9 +205,10 @@ const LoginModal = ({ isOpen, onClose, allowFundis = false }) => {
             <button
               type="button"
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+              onClick={handleGoogleSignIn}
             >
-              <span className="text-2xl mr-2">📱</span>
-              <span className="text-sm font-medium text-gray-700">SMS</span>
+              <span className="text-2xl mr-2">🟦</span>
+              <span className="text-sm font-medium text-gray-700">Google</span>
             </button>
             <button
               type="button"

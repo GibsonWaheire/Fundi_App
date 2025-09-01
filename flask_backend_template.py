@@ -22,6 +22,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
 import os
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -605,7 +607,7 @@ def get_payments():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Authentication endpoint
+# Authentication endpoints
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """User login"""
@@ -631,6 +633,68 @@ def login():
             })
         
         return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/google', methods=['POST'])
+def google_auth():
+    """Google Sign-In verification and user sync"""
+    try:
+        data = request.get_json()
+        id_token_str = data.get('idToken')
+        
+        if not id_token_str:
+            return jsonify({'error': 'ID token required'}), 400
+        
+        # Verify the Google ID token
+        try:
+            # Specify the CLIENT_ID of your app that accesses the backend
+            # For now, we'll skip client ID verification in development
+            # In production, set GOOGLE_CLIENT_ID environment variable
+            client_id = os.environ.get('GOOGLE_CLIENT_ID')
+            idinfo = id_token.verify_oauth2_token(
+                id_token_str, 
+                google_requests.Request(), 
+                client_id
+            )
+            
+            # ID token is valid. Get the user's Google Account ID from the decoded token.
+            google_user_id = idinfo['sub']
+            email = idinfo['email']
+            name = idinfo.get('name', email)
+            
+        except ValueError:
+            # Invalid token
+            return jsonify({'error': 'Invalid Google token'}), 401
+        
+        # Check if user exists in our database
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            # Create new user from Google account
+            user = User(
+                username=name,
+                email=email,
+                password='',  # No password for Google users
+                phone='',
+                role='client',
+                is_active=True
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'phone': user.phone,
+                'role': user.role,
+                'is_active': user.is_active
+            }
+        })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -20,7 +20,11 @@ Class: Moringa School Phase 3
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import datetime
+from flask_bcrypt import Bcrypt
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from marshmallow import Schema, fields, validate, ValidationError
+from datetime import datetime, timedelta
 import os
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -36,20 +40,67 @@ if database_url.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+# SECURITY: Must set SECRET_KEY environment variable in production
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    if app.config['ENV'] == 'production':
+        raise ValueError("SECRET_KEY environment variable must be set in production")
+    else:
+        secret_key = 'dev-secret-key-change-in-production'
+app.config['SECRET_KEY'] = secret_key
 
 # Initialize extensions
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+limiter = Limiter(app, key_func=get_remote_address)
 
-# CORS configuration for production and development
-allowed_origins = [
-    'http://localhost:5173', 
-    'http://localhost:3000',
-    'https://fundimatch-frontend.onrender.com',  # Your production frontend URL
-    'https://YOUR_PROJECT_ID.web.app',  # If you use Firebase hosting
-    'https://YOUR_PROJECT_ID.firebaseapp.com'
-]
+# SECURITY: Add security headers
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+# SECURITY: Error handling middleware
+@app.errorhandler(ValidationError)
+def handle_validation_error(error):
+    return jsonify({'error': 'Validation Error', 'details': error.messages}), 400
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({'error': 'Bad Request', 'message': str(error)}), 400
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal Server Error'}), 500
+
+# SECURITY: Configure CORS for production
+allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
 CORS(app, origins=allowed_origins)
+
+# SECURITY: Input validation schemas
+class UserSchema(Schema):
+    username = fields.Str(required=True, validate=validate.Length(min=3, max=100))
+    email = fields.Email(required=True)
+    password = fields.Str(required=True, validate=validate.Length(min=8))
+    phone = fields.Str(required=True, validate=validate.Regexp(r'^\+?[1-9]\d{1,14}$'))
+    role = fields.Str(required=True, validate=validate.OneOf(['admin', 'client', 'fundi']))
+
+class FundiSchema(Schema):
+    specialization = fields.Str(required=True, validate=validate.Length(min=2, max=100))
+    experience = fields.Str(required=True, validate=validate.Length(min=2, max=50))
+    hourly_rate = fields.Float(required=True, validate=validate.Range(min=0))
+    location = fields.Str(required=True, validate=validate.Length(min=2, max=100))
+    bio = fields.Str(allow_none=True, validate=validate.Length(max=1000))
+
+class JobSchema(Schema):
+    title = fields.Str(required=True, validate=validate.Length(min=5, max=200))
+    description = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
+    location = fields.Str(required=True, validate=validate.Length(min=2, max=200))
+    budget = fields.Float(allow_none=True, validate=validate.Range(min=0))
+    hourly_rate = fields.Float(allow_none=True, validate=validate.Range(min=0))
 
 # Import models (same as CLI)
 # We need to redefine the models for Flask-SQLAlchemy
@@ -257,24 +308,35 @@ def get_users():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users', methods=['POST'])
+@limiter.limit("10 per minute")
 def create_user():
     """Create a new user"""
     try:
         data = request.get_json()
         
+        # SECURITY: Validate input data
+        schema = UserSchema()
+        try:
+            validated_data = schema.load(data)
+        except ValidationError as e:
+            return jsonify({'error': 'Validation Error', 'details': e.messages}), 400
+        
         # Check if user already exists
-        existing_user = User.query.filter_by(email=data['email']).first()
+        existing_user = User.query.filter_by(email=validated_data['email']).first()
         if existing_user:
             return jsonify({'error': 'User already exists'}), 400
         
+        # SECURITY: Hash password before storing
+        hashed_password = bcrypt.generate_password_hash(validated_data['password']).decode('utf-8')
+        
         # Create new user
         new_user = User(
-            username=data['username'],
-            email=data['email'],
-            password=data['password'],  # In production, hash this!
-            phone=data['phone'],
-            role=data.get('role', 'client'),
-            is_active=data.get('is_active', True)
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=hashed_password,  # ✅ SECURE: Hashed password
+            phone=validated_data['phone'],
+            role=validated_data.get('role', 'client'),
+            is_active=validated_data.get('is_active', True)
         )
         
         db.session.add(new_user)
@@ -292,7 +354,8 @@ def create_user():
         }), 201
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/fundis', methods=['GET'])
 def get_fundis():
@@ -332,22 +395,52 @@ def get_fundis():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/fundis', methods=['POST'])
+@limiter.limit("10 per minute")
 def create_fundi():
     """Create a new fundi"""
     try:
         data = request.get_json()
         
+        # SECURITY: Validate user data
+        user_schema = UserSchema()
+        try:
+            validated_user_data = user_schema.load({
+                'username': data['username'],
+                'email': data['email'],
+                'password': data['password'],
+                'phone': data['phone'],
+                'role': 'fundi'
+            })
+        except ValidationError as e:
+            return jsonify({'error': 'User Validation Error', 'details': e.messages}), 400
+        
+        # SECURITY: Validate fundi data
+        fundi_schema = FundiSchema()
+        try:
+            validated_fundi_data = fundi_schema.load({
+                'specialization': data['specialization'],
+                'experience': data['experience'],
+                'hourly_rate': data['hourly_rate'],
+                'location': data['location'],
+                'bio': data.get('bio', '')
+            })
+        except ValidationError as e:
+            return jsonify({'error': 'Fundi Validation Error', 'details': e.messages}), 400
+        
         # Check if user already exists
-        existing_user = User.query.filter_by(email=data['email']).first()
+        existing_user = User.query.filter_by(email=validated_user_data['email']).first()
         if existing_user:
             return jsonify({'error': 'User already exists'}), 400
         
+        # SECURITY: Hash password before storing
+        hashed_password = bcrypt.generate_password_hash(validated_user_data['password']).decode('utf-8')
+        
         # Create user first
         new_user = User(
-            username=data['username'],
-            email=data['email'],
-            password=data['password'],
-            phone=data['phone'],
+            username=validated_user_data['username'],
+            email=validated_user_data['email'],
+            password=hashed_password,  # ✅ SECURE: Hashed password
+            phone=validated_user_data['phone'],
             role='fundi',
             is_active=True
         )
@@ -357,11 +450,11 @@ def create_fundi():
         # Create fundi profile
         new_fundi = Fundi(
             user_id=new_user.id,
-            specialization=data['specialization'],
-            experience=data['experience'],
-            hourly_rate=data['hourly_rate'],
-            location=data['location'],
-            bio=data.get('bio', ''),
+            specialization=validated_fundi_data['specialization'],
+            experience=validated_fundi_data['experience'],
+            hourly_rate=validated_fundi_data['hourly_rate'],
+            location=validated_fundi_data['location'],
+            bio=validated_fundi_data.get('bio', ''),
             rating=data.get('rating', 0.0),
             is_available=data.get('is_available', True)
         )
@@ -623,35 +716,43 @@ def get_payments():
 
 # Authentication endpoints
 @app.route('/api/auth/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     """User login"""
     try:
         data = request.get_json()
-        email = data['email']
-        password = data['password']
+        email = data.get('email')
+        password = data.get('password')
         
-        # Check users table
-        user = User.query.filter_by(email=email, password=password).first()
+        if not email or not password:
+            return jsonify({'success': False, 'error': 'Email and password required'}), 400
+        
+        # SECURITY: Find user by email only (don't expose password in query)
+        user = User.query.filter_by(email=email).first()
         
         if user and user.is_active:
-            return jsonify({
-                'success': True,
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'phone': user.phone,
-                    'role': user.role,
-                    'is_active': user.is_active
-                }
-            })
+            # SECURITY: Verify password hash
+            if bcrypt.check_password_hash(user.password, password):
+                return jsonify({
+                    'success': True,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'phone': user.phone,
+                        'role': user.role,
+                        'is_active': user.is_active
+                    }
+                })
         
+        # SECURITY: Don't reveal which field is invalid
         return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/auth/google', methods=['POST'])
+@limiter.limit("10 per minute")
 def google_auth():
     """Google Sign-In verification and user sync"""
     try:
@@ -686,11 +787,12 @@ def google_auth():
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            # Create new user from Google account
+            # SECURITY: Create new user from Google account with secure password
+            secure_password = bcrypt.generate_password_hash(os.urandom(32).hex()).decode('utf-8')
             user = User(
                 username=name,
                 email=email,
-                password='',  # No password for Google users
+                password=secure_password,  # ✅ SECURE: Random secure password for Google users
                 phone='',
                 role='client',
                 is_active=True
@@ -742,4 +844,6 @@ if __name__ == '__main__':
     
     # Run the app
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # SECURITY: Disable debug mode in production
+debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+app.run(host='0.0.0.0', port=port, debug=debug_mode)

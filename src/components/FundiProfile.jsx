@@ -24,9 +24,9 @@ const FundiProfile = () => {
       try {
         // Fetch fundis, bookings, and reviews data
         const [fundisResponse, bookingsResponse, reviewsResponse] = await Promise.all([
-          fetch('http://localhost:3001/fundis'),
-          fetch('http://localhost:3001/bookings'),
-          fetch('http://localhost:3001/reviews')
+                fetch('/api/fundis'),
+      fetch('/api/bookings'),
+      fetch('/api/reviews')
         ])
         
         const fundisData = await fundisResponse.json()

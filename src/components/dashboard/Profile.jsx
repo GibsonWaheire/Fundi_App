@@ -27,7 +27,7 @@ export default function Profile() {
 
   const handleSave = () => {
     // Here you would typically save to backend
-    console.log('Saving profile:', profile)
+    // SECURITY: Removed console.log for production
     setIsEditing(false)
     alert('Profile updated successfully!')
   }

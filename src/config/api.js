@@ -4,7 +4,7 @@
 const API_CONFIG = {
   // Development: JSON Server
   development: {
-    baseURL: 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     endpoints: {
       users: '/users',
       fundis: '/fundis',

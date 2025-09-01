@@ -45,7 +45,7 @@ export default function Availability() {
 
   const handleSave = () => {
     // Here you would typically save to backend
-    console.log('Saving availability:', availability)
+    // SECURITY: Removed console.log for production
     alert('Availability updated successfully!')
   }
 

@@ -17,7 +17,7 @@ const Contact = () => {
     
     // Simulate form submission
     setTimeout(() => {
-      console.log('Contact form submitted:', formData)
+      // SECURITY: Removed console.log for production
       setIsSubmitting(false)
       alert('Thank you for your message! We will get back to you soon.')
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' })

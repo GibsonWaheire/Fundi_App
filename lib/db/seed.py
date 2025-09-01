@@ -333,7 +333,7 @@ def create_default_admin():
         admin = User(
             username="admin",
             email="admin@fundi.com",
-            password="admin123",
+            password="TEMP_PASSWORD_CHANGE_IN_PRODUCTION",
             phone="+254700000002",
             role="admin",
             is_active=True
@@ -342,7 +342,7 @@ def create_default_admin():
         session.commit()
         print("✅ Default admin user created")
         print("  📧 Email: admin@fundi.com")
-        print("  🔑 Password: admin123")
+        print("  🔑 Password: TEMP_PASSWORD_CHANGE_IN_PRODUCTION")
         
     except Exception as e:
         print(f"❌ Error creating admin: {str(e)}")
@@ -374,9 +374,9 @@ def main():
         print("\n🎮 You can now run the CLI:")
         print("   python lib/main.py")
         print("\n🔐 Login credentials:")
-        print("   Admin: admin@fundi.com / admin123")
-        print("   Client: test@example.com / password123")
-        print("   Fundi: fundi@example.com / fundi123")
+        print("   Admin: admin@fundi.com / TEMP_PASSWORD_CHANGE_IN_PRODUCTION")
+        print("   Client: test@example.com / TEMP_PASSWORD_CHANGE_IN_PRODUCTION")
+        print("   Fundi: fundi@example.com / TEMP_PASSWORD_CHANGE_IN_PRODUCTION")
     else:
         print("\n❌ Seeding failed. Please check the error messages above.")
 

@@ -1,7 +1,7 @@
 # wsgi.py at repo root
 try:
     # Preferred: app factory
-    from flask_backend_template import create_app
+    from flask_backend_template import create_app #what is this ?  
     app = create_app()
 except ImportError:
     # Fallback: direct app object inside the same module

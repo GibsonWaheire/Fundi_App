@@ -121,7 +121,7 @@ const PublicFindFundis = () => {
   }
 
   const handlePaymentSuccess = () => {
-    console.log('🎉 Payment successful! Unlocking fundi:', selectedFundi?.name)
+            // SECURITY: Removed console.log for production
     
     // Close payment modal
     setIsPaymentModalOpen(false)

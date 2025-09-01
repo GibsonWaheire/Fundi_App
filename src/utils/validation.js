@@ -57,9 +57,24 @@ export const validatePassword = (password) => {
  */
 export const validatePhone = (phone) => {
   if (!phone || typeof phone !== 'string') return false
-  // Kenyan phone number format: +254 followed by 9 digits starting with 1 or 7
-  const phoneRegex = /^\+254[17]\d{8}$/
-  return phoneRegex.test(phone.trim())
+  
+  const trimmedPhone = phone.trim()
+  
+  // Accept multiple Kenyan phone formats:
+  // +254XXXXXXXXX (international format)
+  // 07XXXXXXXX (local format starting with 07)
+  // 01XXXXXXXX (local format starting with 01)
+  // 254XXXXXXXXX (without +)
+  
+  const phoneRegex = /^(\+254|254|07|01)\d{8,9}$/
+  
+  if (phoneRegex.test(trimmedPhone)) {
+    return true
+  }
+  
+  // Also accept +254XXXXXXXXX format (9 digits after +254)
+  const internationalRegex = /^\+254[17]\d{8}$/
+  return internationalRegex.test(trimmedPhone)
 }
 
 /**

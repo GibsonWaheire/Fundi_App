@@ -728,6 +728,13 @@ def not_found(error):
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
+def create_app():
+    """Application factory pattern for deployment"""
+    return app
+
+# For production deployment
+application = app
+
 if __name__ == '__main__':
     # Create database tables
     with app.app_context():
